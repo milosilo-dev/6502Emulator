@@ -1,0 +1,27 @@
+## Impemented instructions (26 / 56):
+- ADC
+- AND
+- ASL
+- BCC
+- LDA
+- LDX
+- LDY
+- JMP
+- NOP
+- BVS
+- BVC
+- BPL
+- BNE
+- BMI
+- BEQ
+- BCS
+- BCC
+- BIT
+- BRK
+- CLC
+- CLD
+- CLI
+- CLV
+- CMP
+- CPX
+- CPY
