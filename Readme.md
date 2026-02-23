@@ -1,4 +1,4 @@
-## Impemented instructions (34 / 56):
+## Impemented instructions (35 / 56):
 - ADC
 - AND
 - ASL
@@ -33,3 +33,4 @@
 - INX
 - INY
 - JSR
+- ORA

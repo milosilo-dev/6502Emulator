@@ -1590,4 +1590,140 @@ mod tests {
         // SP should be decremented by 4 total (two JSRs)
         assert_eq!(cpu.read_sp(), 0xF9);
     }
+
+    #[test]
+    fn ora_immediate() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0x09); // ORA immediate
+        bus.write(0x0003, 0x0F);
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_immediate_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x09); // ORA immediate
+        bus.write(0x0003, 0x00);
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn ora_immediate_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x09); // ORA immediate
+        bus.write(0x0003, 0x80); // bit 7 set -> N set
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn ora_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0050, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0x05); // ORA zero page
+        bus.write(0x0003, 0x50);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x15); // ORA zero page, X
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 8);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0x0D); // ORA absolute
+        bus.write(0x0003, 0x34);
+        bus.write(0x0004, 0x12);
+        cpu.execute(&mut bus, 6);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x03);
+        bus.write(0x0004, 0x1D); // ORA absolute, X
+        bus.write(0x0005, 0x00);
+        bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 8);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_absolute_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1002, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0xA0); // LDY immediate
+        bus.write(0x0003, 0x02);
+        bus.write(0x0004, 0x19); // ORA absolute, Y
+        bus.write(0x0005, 0x00);
+        bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
+        cpu.execute(&mut bus, 8);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_indirect_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x00); // lo byte of target
+        bus.write(0x0016, 0x30); // hi byte of target -> 0x3000
+        bus.write(0x3000, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x01); // ORA indirect, X
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 10);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn ora_indirect_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0020, 0x00); // lo byte of base
+        bus.write(0x0021, 0x30); // hi byte of base -> 0x3000
+        bus.write(0x3002, 0x0F);
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xF0);
+        bus.write(0x0002, 0xA0); // LDY immediate
+        bus.write(0x0003, 0x02);
+        bus.write(0x0004, 0x11); // ORA indirect, Y
+        bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
+        cpu.execute(&mut bus, 9);
+        assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
 }

@@ -372,6 +372,12 @@ impl CPU {
         self.pc = target;
     }
 
+    fn ora(&mut self, value: u8, ticks: &mut u32){
+        *ticks += 1;
+        self.a = self.a | value;
+        self.eor_set_status(self.a);
+    }
+
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
         while min_ticks > ticks{
@@ -1012,6 +1018,54 @@ impl CPU {
                     // INC_Y
                     self.incy(&mut ticks);
                     println!("Increment the y register to {:X}", self.x);
+                }
+                0x09 => {
+                    // ORA_IMMEDIATE
+                    let value = self.immediate_adressing(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x05 => {
+                    // ORA_ZERO_PAGE
+                    let value = self.zero_page_adressing(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x15 => {
+                    // ORA_ZERO_PAGE_X
+                    let value = self.zero_page_adressing_x(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x0D => {
+                    // ORA_ABSOLUTE
+                    let value = self.absolute_adressing(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x1D => {
+                    // ORA_ABSOLUTE_X
+                    let value = self.absolute_adressing_x(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x19 => {
+                    // ORA_ABSOLUTE_Y
+                    let value = self.absolute_adressing_y(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x01 => {
+                    // ORA_INDIRECT_X
+                    let value = self.indirect_indexing_adressing_x(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x11 => {
+                    // ORA_INDIRECT_Y
+                    let value = self.indexing_indirect_adressing_y(bus, &mut ticks);
+                    self.ora(value, &mut ticks);
+                    println!("Logical Inclusive OR on {:X}", self.x);
                 }
                 0xEA => {
                     // NOP
