@@ -491,7 +491,7 @@ mod tests {
         assert_eq!(cpu.read_acc(), 0x55);
     }
 
-#[test]
+    #[test]
     fn bcc_branches_when_carry_clear() {
         let (mut cpu, mut bus) = init();
         // Carry is clear by default
