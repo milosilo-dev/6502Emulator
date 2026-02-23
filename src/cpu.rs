@@ -129,6 +129,11 @@ impl CPU {
         self.set_status((value & 0b10000000) > 0, 7); // set n flag
     }
 
+    fn eor_set_status(&mut self, value: u8) {
+        self.set_status(value == 0, 1); // set z flag
+        self.set_status((value & 0b10000000) > 0, 7); // set n flag
+    }
+
     fn immediate_adressing(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
         *ticks += 1;
         self.fetch_byte(bus)
@@ -326,6 +331,12 @@ impl CPU {
         *ticks += 1;
         self.y = self.y.wrapping_sub(1);
         self.dec_set_status(self.y);
+    }
+
+    fn eor(&mut self, ticks: &mut u32, value: u8){
+        *ticks += 1;
+        self.a = self.a ^ value;
+        self.eor_set_status(self.a);
     }
 
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
@@ -880,6 +891,54 @@ impl CPU {
                     // DEC_Y
                     self.decy(&mut ticks);
                     println!("Decremented the y register to {:X}", self.x);
+                }
+                0x49 => {
+                    // EOR_IMMEDIATE
+                    let value = self.immediate_adressing(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x45 => {
+                    // EOR_ZERO_PAGE
+                    let value = self.zero_page_adressing(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x55 => {
+                    // EOR_ZERO_PAGE_X
+                    let value = self.zero_page_adressing_x(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x4D => {
+                    // EOR_ABSOLUTE
+                    let value = self.absolute_adressing(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x5D => {
+                    // EOR_ABSOLUTE_X
+                    let value = self.absolute_adressing_x(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x59 => {
+                    // EOR_ABSOLUTE_Y
+                    let value = self.absolute_adressing_y(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x41 => {
+                    // EOR_INDIRECT_X
+                    let value = self.indirect_indexing_adressing_x(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0x51 => {
+                    // EOR_INDIRECT_Y
+                    let value = self.indexing_indirect_adressing_y(bus, &mut ticks);
+                    self.eor(&mut ticks, value);
+                    println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
                 }
                 0xEA => {
                     // NOP
