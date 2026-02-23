@@ -346,6 +346,18 @@ impl CPU {
         self.dec_set_status(value);
     }
 
+    fn incx(&mut self, ticks: &mut u32){
+        *ticks += 1;
+        self.x = self.x.wrapping_add(1);
+        self.dec_set_status(self.x);
+    }
+
+    fn incy(&mut self, ticks: &mut u32){
+        *ticks += 1;
+        self.y = self.y.wrapping_add(1);
+        self.dec_set_status(self.y);
+    }
+
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
         while min_ticks > ticks{
@@ -970,6 +982,16 @@ impl CPU {
                     let addr = self.get_absolute_adress_x(bus, &mut ticks);
                     self.inc(bus, &mut ticks, addr as u16);
                     println!("Increment addr: {:X}", addr);
+                }
+                0xE8 => {
+                    // INC_X
+                    self.incx(&mut ticks);
+                    println!("Increment the x register to {:X}", self.x);
+                }
+                0xC8 => {
+                    // INC_Y
+                    self.incy(&mut ticks);
+                    println!("Increment the y register to {:X}", self.x);
                 }
                 0xEA => {
                     // NOP

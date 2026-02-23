@@ -1457,4 +1457,68 @@ mod tests {
         cpu.execute(&mut bus, 9);
         assert_eq!(bus.read(0x1003), 0x0A); // 0x09 + 1
     }
+    
+    #[test]
+    fn inx_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x09);
+        bus.write(0x0002, 0xE8); // INX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x0A); // 0x09 + 1
+    }
+
+    #[test]
+    fn inx_wraps() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0xE8); // INX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x00); // 0xFF wraps to 0x00
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn inx_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x7F);
+        bus.write(0x0002, 0xE8); // INX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x80); // 0x7F + 1 = 0x80, bit 7 set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn iny_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x09);
+        bus.write(0x0002, 0xC8); // INY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x0A); // 0x09 + 1
+    }
+
+    #[test]
+    fn iny_wraps() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0xC8); // INY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x00); // 0xFF wraps to 0x00
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn iny_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x7F);
+        bus.write(0x0002, 0xC8); // INY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x80); // 0x7F + 1 = 0x80, bit 7 set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
 }
