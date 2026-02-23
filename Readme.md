@@ -1,4 +1,4 @@
-## Impemented instructions (26 / 56):
+## Impemented instructions (29 / 56):
 - ADC
 - AND
 - ASL
@@ -25,3 +25,6 @@
 - CMP
 - CPX
 - CPY
+- DEC
+- DEX
+- DEY

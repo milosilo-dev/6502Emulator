@@ -316,6 +316,18 @@ impl CPU {
         self.dec_set_status(value);
     }
 
+    fn decx(&mut self, ticks: &mut u32){
+        *ticks += 1;
+        self.x = self.x.wrapping_sub(1);
+        self.dec_set_status(self.x);
+    }
+
+    fn decy(&mut self, ticks: &mut u32){
+        *ticks += 1;
+        self.y = self.y.wrapping_sub(1);
+        self.dec_set_status(self.y);
+    }
+
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
         while min_ticks > ticks{
@@ -858,6 +870,16 @@ impl CPU {
                     let addr = self.get_absolute_adress_x(bus, &mut ticks);
                     self.dec(bus, &mut ticks, addr as u16);
                     println!("Decremented addr: {:X}", addr);
+                }
+                0xCA => {
+                    // DEC_X
+                    self.decx(&mut ticks);
+                    println!("Decremented the x register to {:X}", self.x);
+                }
+                0x88 => {
+                    // DEC_Y
+                    self.decy(&mut ticks);
+                    println!("Decremented the y register to {:X}", self.x);
                 }
                 0xEA => {
                     // NOP
