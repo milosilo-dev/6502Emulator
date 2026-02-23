@@ -85,7 +85,3 @@ This emulator aims to be:
 - Clean and dependency-free  
 - Flexible enough to power full-system emulation  
 - Educational and easy to extend  
-
----
-
-If you're building a retro computer, game console, or experimenting with 8-bit architecture in Rust — this is a solid foundation to build on.
