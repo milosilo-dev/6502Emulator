@@ -1188,4 +1188,70 @@ mod tests {
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
+
+    #[test]
+    fn dec_zp() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xC6);
+        bus.write(0x0001, 0x55);
+        bus.write(0x0055, 0x01);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0055), 0x00);
+    }
+    
+    #[test]
+    fn dec_zp_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2);
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0xD6);
+        bus.write(0x0003, 0x50);
+        bus.write(0x0055, 0x01);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0055), 0x00);
+    }
+
+    #[test]
+    fn dec_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xCE);
+        bus.write(0x0001, 0x55);
+        bus.write(0x0002, 0x00);
+        bus.write(0x0055, 0x01);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0055), 0x00);
+    }
+
+    #[test]
+    fn dec_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2);
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0xDE);
+        bus.write(0x0003, 0x50);
+        bus.write(0x0004, 0x00);
+        bus.write(0x0055, 0x01);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0055), 0x00);
+    }
+
+    #[test]
+    fn decx() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2);
+        bus.write(0x0001, 0x02);
+        bus.write(0x0002, 0xCA);
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x01);
+    }
+
+    #[test]
+    fn decy() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0);
+        bus.write(0x0001, 0x02);
+        bus.write(0x0002, 0x88);
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x01);
+    }
 }
