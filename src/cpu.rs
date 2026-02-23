@@ -124,6 +124,11 @@ impl CPU {
         self.set_status((out & 0b10000000) > 0, 7); // set n flag
     }
 
+    fn dec_set_status(&mut self, value: u8) {
+        self.set_status(value == 0, 1); // set z flag
+        self.set_status((value & 0b10000000) > 0, 7); // set n flag
+    }
+
     fn immediate_adressing(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
         *ticks += 1;
         self.fetch_byte(bus)
@@ -302,6 +307,13 @@ impl CPU {
 
         self.pc = u16::from_le_bytes([bus.read(0xFFFE), bus.read(0xFFFF)]);
         *ticks += 7;
+    }
+
+    fn dec(&mut self, bus: &mut Bus, ticks: &mut u32, addr: u16) {
+        let value = bus.read(addr).wrapping_sub(1);
+        *ticks += 3;
+        bus.write(addr, value);
+        self.dec_set_status(value);
     }
 
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
@@ -822,6 +834,30 @@ impl CPU {
                         self.status & 0b00000001,
                         self.status & 0b00000010,
                         self.status & 0b10000000);
+                }
+                0xC6 => {
+                    // DEC_ZP
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.dec(bus, &mut ticks, addr as u16);
+                    println!("Decremented addr: {:X}", addr);
+                }
+                0xD6 => {
+                    // DEC_ZP_x
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.dec(bus, &mut ticks, addr as u16);
+                    println!("Decremented addr: {:X}", addr);
+                }
+                0xCE => {
+                    // DEC_ABSOLUTE
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.dec(bus, &mut ticks, addr as u16);
+                    println!("Decremented addr: {:X}", addr);
+                }
+                0xDE => {
+                    // DEC_ABSOLUTE_X
+                    let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                    self.dec(bus, &mut ticks, addr as u16);
+                    println!("Decremented addr: {:X}", addr);
                 }
                 0xEA => {
                     // NOP
