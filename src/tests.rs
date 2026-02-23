@@ -1390,4 +1390,71 @@ mod tests {
         cpu.execute(&mut bus, 9);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
+    #[test]
+    fn inc_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x09);
+        bus.write(0x0000, 0xE6); // INC zero page
+        bus.write(0x0001, 0x42);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0042), 0x0A); // 0x09 + 1
+    }
+
+    #[test]
+    fn inc_zero_page_wraps() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0xFF);
+        bus.write(0x0000, 0xE6); // INC zero page
+        bus.write(0x0001, 0x42);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0042), 0x00); // 0xFF wraps to 0x00
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn inc_zero_page_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x7F);
+        bus.write(0x0000, 0xE6); // INC zero page
+        bus.write(0x0001, 0x42);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0042), 0x80); // 0x7F + 1 = 0x80, bit 7 set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn inc_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x09);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0xF6); // INC zero page, X
+        bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x0015), 0x0A); // 0x09 + 1
+    }
+
+    #[test]
+    fn inc_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x09);
+        bus.write(0x0000, 0xEE); // INC absolute
+        bus.write(0x0001, 0x34);
+        bus.write(0x0002, 0x12);
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x0A); // 0x09 + 1
+    }
+
+    #[test]
+    fn inc_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x09);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x03);
+        bus.write(0x0002, 0xFE); // INC absolute, X
+        bus.write(0x0003, 0x00);
+        bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x1003), 0x0A); // 0x09 + 1
+    }
 }

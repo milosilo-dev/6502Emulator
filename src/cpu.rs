@@ -339,6 +339,13 @@ impl CPU {
         self.eor_set_status(self.a);
     }
 
+    fn inc(&mut self, bus: &mut Bus, ticks: &mut u32, addr: u16) {
+        let value = bus.read(addr).wrapping_add(1);
+        *ticks += 3;
+        bus.write(addr, value);
+        self.dec_set_status(value);
+    }
+
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
         while min_ticks > ticks{
@@ -865,7 +872,7 @@ impl CPU {
                     println!("Decremented addr: {:X}", addr);
                 }
                 0xD6 => {
-                    // DEC_ZP_x
+                    // DEC_ZP_X
                     let addr = self.get_zp_adress_x(bus, &mut ticks);
                     self.dec(bus, &mut ticks, addr as u16);
                     println!("Decremented addr: {:X}", addr);
@@ -939,6 +946,30 @@ impl CPU {
                     let value = self.indexing_indirect_adressing_y(bus, &mut ticks);
                     self.eor(&mut ticks, value);
                     println!("Exlusive ORe'd {:X} with {:X}", self.a, value);
+                }
+                0xE6 => {
+                    // INC_ZP
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.inc(bus, &mut ticks, addr as u16);
+                    println!("Increment addr: {:X}", addr);
+                }
+                0xF6 => {
+                    // INC_ZP_X
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.inc(bus, &mut ticks, addr as u16);
+                    println!("Increment addr: {:X}", addr);
+                }
+                0xEE => {
+                    // INC_ABSOLUTE
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.inc(bus, &mut ticks, addr as u16);
+                    println!("Increment addr: {:X}", addr);
+                }
+                0xFE => {
+                    // INC_ABSOLUTE_X
+                    let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                    self.inc(bus, &mut ticks, addr as u16);
+                    println!("Increment addr: {:X}", addr);
                 }
                 0xEA => {
                     // NOP
