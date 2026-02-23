@@ -38,6 +38,10 @@ impl CPU {
         self.y
     }
 
+    pub fn read_sp(&self) -> u8 {
+        self.sp
+    }
+
     pub fn read_status(&self) -> u8 {
         self.status
     }
@@ -357,6 +361,16 @@ impl CPU {
         self.y = self.y.wrapping_add(1);
         self.dec_set_status(self.y);
     }
+    
+    fn jsr(&mut self, bus: &mut Bus, ticks: &mut u32, target: u16){
+        *ticks += 2;
+
+        let ret_addr = self.pc - 1;
+        self.push_byte_stack(bus, (ret_addr >> 8) as u8);
+        self.push_byte_stack(bus, (ret_addr & 0xFF) as u8);
+
+        self.pc = target;
+    }
 
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
@@ -481,6 +495,12 @@ impl CPU {
                     // INDIRECT_JMP
                     self.pc = self.get_indirect_adress(bus, &mut ticks);
                     println!("Jumped to {:X}", self.pc);
+                }
+                0x20 => {
+                    // JSR
+                    let target = self.get_absolute_adress(bus, &mut ticks);
+                    self.jsr(bus, &mut ticks, target);
+                    println!("JSR to {:X}", target);
                 }
                 0x69 => {
                     // ADC_IMMEDIATE

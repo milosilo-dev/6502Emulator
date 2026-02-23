@@ -1457,7 +1457,7 @@ mod tests {
         cpu.execute(&mut bus, 9);
         assert_eq!(bus.read(0x1003), 0x0A); // 0x09 + 1
     }
-    
+
     #[test]
     fn inx_basic() {
         let (mut cpu, mut bus) = init();
@@ -1520,5 +1520,74 @@ mod tests {
         cpu.execute(&mut bus, 4);
         assert_eq!(cpu.read_y(), 0x80); // 0x7F + 1 = 0x80, bit 7 set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn jsr_jumps_to_address() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x20); // JSR
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02); // target = 0x0200
+        bus.write(0x0200, 0xA9); // LDA immediate at subroutine
+        bus.write(0x0201, 0x42);
+        cpu.execute(&mut bus, 8); // 6 ticks for JSR + 2 for LDA
+        assert_eq!(cpu.read_acc(), 0x42);
+    }
+
+    #[test]
+    fn jsr_pushes_return_address_hi() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x20); // JSR at 0x0000
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02); // target = 0x0200
+        bus.write(0x0200, 0xEA); // NOP at subroutine
+        cpu.execute(&mut bus, 8);
+        // JSR pushes PC-1 = 0x0002 (last byte of JSR instruction)
+        // hi byte pushed to 0x01FD (SP starts at 0xFD)
+        assert_eq!(bus.read(0x01FD), 0x00); // hi byte of 0x0002
+    }
+
+    #[test]
+    fn jsr_pushes_return_address_lo() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x20); // JSR at 0x0000
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02); // target = 0x0200
+        bus.write(0x0200, 0xEA); // NOP at subroutine
+        cpu.execute(&mut bus, 8);
+        // lo byte pushed to 0x01FC
+        assert_eq!(bus.read(0x01FC), 0x02); // lo byte of 0x0002
+    }
+
+    #[test]
+    fn jsr_decrements_sp_by_two() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x20); // JSR
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02);
+        bus.write(0x0200, 0xEA); // NOP at subroutine
+        cpu.execute(&mut bus, 8);
+        // SP starts at 0xFD, two pushes -> 0xFB
+        assert_eq!(cpu.read_sp(), 0xFB);
+    }
+
+    #[test]
+    fn jsr_nested() {
+        let (mut cpu, mut bus) = init();
+        // First JSR at 0x0000 -> 0x0200
+        bus.write(0x0000, 0x20);
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02);
+        // Second JSR at 0x0200 -> 0x0300
+        bus.write(0x0200, 0x20);
+        bus.write(0x0201, 0x00);
+        bus.write(0x0202, 0x03);
+        // LDA at final subroutine
+        bus.write(0x0300, 0xA9);
+        bus.write(0x0301, 0x42);
+        cpu.execute(&mut bus, 14); // 6 + 6 + 2
+        assert_eq!(cpu.read_acc(), 0x42);
+        // SP should be decremented by 4 total (two JSRs)
+        assert_eq!(cpu.read_sp(), 0xF9);
     }
 }

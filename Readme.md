@@ -1,4 +1,4 @@
-## Impemented instructions (33 / 56):
+## Impemented instructions (34 / 56):
 - ADC
 - AND
 - ASL
@@ -32,3 +32,4 @@
 - INC
 - INX
 - INY
+- JSR
