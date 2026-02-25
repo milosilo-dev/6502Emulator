@@ -71,13 +71,8 @@ impl CPU {
         bus.read(0x0100 + self.sp as u16)
     }
 
-    fn read_byte_stack(&self, bus: &Bus) -> u8{
-        return bus.read(self.sp as u16 + 0x0100);
-    }
-
     fn push_byte_stack(&mut self, bus: &mut Bus, value: u8){
         bus.write(self.sp as u16 + 0x0100, value);
-        println!("Pushed byte {:X} to stack pointer {:X}", value, self.sp);
         self.sp = self.sp.wrapping_sub(1);
     }
 
@@ -376,6 +371,26 @@ impl CPU {
         *ticks += 1;
         self.a = self.a | value;
         self.eor_set_status(self.a);
+    }
+
+    fn pha(&mut self, bus: &mut Bus, ticks: &mut u32){
+        self.push_byte_stack(bus, self.a);
+        *ticks += 2;
+    }
+
+    fn php(&mut self, bus: &mut Bus, ticks: &mut u32){
+        self.push_byte_stack(bus, self.status);
+        *ticks += 2;
+    }
+
+    fn pla(&mut self, bus: &Bus, ticks: &mut u32){
+        self.a = self.pull_byte_stack(bus);
+        *ticks += 3;
+    }
+
+    fn plp(&mut self, bus: &Bus, ticks: &mut u32){
+        self.status = self.pull_byte_stack(bus);
+        *ticks += 3;
     }
 
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
@@ -1066,6 +1081,26 @@ impl CPU {
                     let value = self.indexing_indirect_adressing_y(bus, &mut ticks);
                     self.ora(value, &mut ticks);
                     println!("Logical Inclusive OR on {:X}", self.x);
+                }
+                0x48 => {
+                    // PHA
+                    self.pha(bus, &mut ticks);
+                    println!("Pushed the contense of the accumulator to the stack!")
+                }
+                0x08 => {
+                    // PHP
+                    self.php(bus, &mut ticks);
+                    println!("Pushed the processor status to the stack!")
+                }
+                0x68 => {
+                    // PLA
+                    self.pla(bus, &mut ticks);
+                    println!("Got {:X} from the stack!", self.a);
+                }
+                0x28 => {
+                    // PLP
+                    self.plp(bus, &mut ticks);
+                    println!("Got {:X} from the stack!", self.status)
                 }
                 0xEA => {
                     // NOP

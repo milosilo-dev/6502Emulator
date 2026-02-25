@@ -1,3 +1,6 @@
+// WARNING: THIS IS ALL AI GENERATED CODE, I made the basic structure but let claude to the most because that way
+//      I could get a second opinion on weather or not I am implementing an instruction correctly
+
 #[cfg(test)]
 mod tests {
     use crate::cpu::CPU;
@@ -1725,5 +1728,113 @@ mod tests {
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
         cpu.execute(&mut bus, 9);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
+    }
+
+    #[test]
+    fn pha_pushes_accumulator_to_stack() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x48); // PHA
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x01FD), 0x42); // written to 0x01FD (SP starts at 0xFD)
+    }
+
+    #[test]
+    fn pha_decrements_sp() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x48); // PHA
+        cpu.execute(&mut bus, 5);
+        assert_eq!(cpu.read_sp(), 0xFC); // SP starts at 0xFD, one push -> 0xFC
+    }
+
+    #[test]
+    fn pha_does_not_modify_accumulator() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x48); // PHA
+        cpu.execute(&mut bus, 5);
+        assert_eq!(cpu.read_acc(), 0x42); // A unchanged
+    }
+
+    #[test]
+    fn pha_multiple_pushes() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x11);
+        bus.write(0x0002, 0x48); // PHA
+        bus.write(0x0003, 0xA9); // LDA immediate
+        bus.write(0x0004, 0x22);
+        bus.write(0x0005, 0x48); // PHA
+        bus.write(0x0006, 0xA9); // LDA immediate
+        bus.write(0x0007, 0x33);
+        bus.write(0x0008, 0x48); // PHA
+        cpu.execute(&mut bus, 15);
+        assert_eq!(bus.read(0x01FD), 0x11); // first push
+        assert_eq!(bus.read(0x01FC), 0x22); // second push
+        assert_eq!(bus.read(0x01FB), 0x33); // third push
+        assert_eq!(cpu.read_sp(), 0xFA);    // SP decremented 3 times
+    }
+
+    #[test]
+    fn php_pushes_status_to_stack() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x08); // PHP
+        cpu.execute(&mut bus, 3);
+        // SP starts at 0xFD, one push -> written to 0x01FD
+        let pushed = bus.read(0x01FD);
+
+        // B flag (bit 4) and unused (bit 5) must be set in pushed value
+        assert_eq!(pushed, cpu.read_status());
+    }
+
+    #[test]
+    fn php_decrements_sp() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x08); // PHP
+        cpu.execute(&mut bus, 3);
+        assert_eq!(cpu.read_sp(), 0xFC); // SP starts at 0xFD, one push -> 0xFC
+    }
+
+    #[test]
+    fn php_pushes_carry_flag() {
+        let (mut cpu, mut bus) = init();
+        // Set carry via ADC overflow
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0x08); // PHP
+        cpu.execute(&mut bus, 7);
+        let pushed = bus.read(0x01FD);
+        assert_eq!(pushed & 0b00000001, 0b00000001); // C set in pushed status
+    }
+
+    #[test]
+    fn php_pushes_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x08); // PHP
+        cpu.execute(&mut bus, 5);
+        let pushed = bus.read(0x01FD);
+        assert_eq!(pushed & 0b10000000, 0b10000000); // N set in pushed status
+    }
+
+    #[test]
+    fn php_does_not_modify_status() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x08); // PHP
+        cpu.execute(&mut bus, 5);
+        // Status register itself should be unchanged after PHP
+        let status_before = cpu.read_status();
+        bus.write(0x0003, 0x08); // PHP again
+        cpu.execute(&mut bus, 3);
+        assert_eq!(cpu.read_status(), status_before);
     }
 }

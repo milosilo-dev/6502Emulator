@@ -1,4 +1,4 @@
-## Impemented instructions (35 / 56):
+## Impemented instructions (39 / 56):
 - ADC
 - AND
 - ASL
@@ -34,3 +34,7 @@
 - INY
 - JSR
 - ORA
+- PHA
+- PHP
+- PLA
+- PLP
