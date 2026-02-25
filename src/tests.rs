@@ -1837,4 +1837,113 @@ mod tests {
         cpu.execute(&mut bus, 3);
         assert_eq!(cpu.read_status(), status_before);
     }
+
+    #[test]
+    fn rol_accumulator_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x04);
+        bus.write(0x0002, 0x2A); // ROL accumulator
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x08); // 0x04 << 1, carry was 0
+    }
+
+    #[test]
+    fn rol_accumulator_carry_in() {
+        let (mut cpu, mut bus) = init();
+        // Set carry via ADC overflow first
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0xA9); // LDA immediate
+        bus.write(0x0005, 0x04);
+        bus.write(0x0006, 0x2A); // ROL accumulator - carry rotates into bit 0
+        cpu.execute(&mut bus, 9);
+        assert_eq!(cpu.read_acc(), 0x09); // 0x04 << 1 | carry(1) = 0x09
+    }
+
+    #[test]
+    fn rol_accumulator_carry_out() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x80); // bit 7 set -> will shift into carry
+        bus.write(0x0002, 0x2A); // ROL accumulator
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x00); // 0x80 << 1 = 0x00 (bit 7 shifted out)
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn rol_accumulator_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x40); // 0x40 << 1 = 0x80, sets N
+        bus.write(0x0002, 0x2A); // ROL accumulator
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn rol_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x04);
+        bus.write(0x0000, 0x26); // ROL zero page
+        bus.write(0x0001, 0x42);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0042), 0x08); // 0x04 << 1
+    }
+
+    #[test]
+    fn rol_zero_page_carry_in() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x04);
+        // Set carry first
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0x26); // ROL zero page
+        bus.write(0x0005, 0x42);
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x0042), 0x09); // 0x04 << 1 | carry(1) = 0x09
+    }
+
+    #[test]
+    fn rol_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x04);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0x36); // ROL zero page, X
+        bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x0015), 0x08); // 0x04 << 1
+    }
+
+    #[test]
+    fn rol_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x04);
+        bus.write(0x0000, 0x2E); // ROL absolute
+        bus.write(0x0001, 0x34);
+        bus.write(0x0002, 0x12);
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x08); // 0x04 << 1
+    }
+
+    #[test]
+    fn rol_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x04);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x03);
+        bus.write(0x0002, 0x3E); // ROL absolute, X
+        bus.write(0x0003, 0x00);
+        bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x1003), 0x08); // 0x04 << 1
+    }
 }

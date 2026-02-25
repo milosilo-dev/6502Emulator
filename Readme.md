@@ -64,7 +64,7 @@ All tests were generated using AI to ensure they match the *real* 6502 behaviour
 | INC | INX | INY | JMP |
 | JSR | LDA | LDX | LDY |
 | NOP | ORA | PHA | PHP |
-| PLA | PLP |     |     |
+| PLA | PLP | ROL |     |
 
 ---
 

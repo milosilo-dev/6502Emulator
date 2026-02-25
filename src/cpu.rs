@@ -133,6 +133,12 @@ impl CPU {
         self.set_status((value & 0b10000000) > 0, 7); // set n flag
     }
 
+    fn rotate_set_status(&mut self, value: u8, old_msb: bool) {
+        self.set_status(old_msb, 0); // set c flag
+        self.set_status(value == 0, 1); // set z flag
+        self.set_status((value & 0b10000000) > 0, 7); // set n flag
+    }
+
     fn immediate_adressing(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
         *ticks += 1;
         self.fetch_byte(bus)
@@ -391,6 +397,22 @@ impl CPU {
     fn plp(&mut self, bus: &Bus, ticks: &mut u32){
         self.status = self.pull_byte_stack(bus);
         *ticks += 3;
+    }
+
+    fn rol_a(&mut self, ticks: &mut u32){
+        let msb = self.a & 0b10000000 != 0;
+        self.a = (self.a.rotate_left(1) & 0b11111110) | (self.status & 0b00000001);
+        *ticks += 1;
+        self.rotate_set_status(self.a, msb);
+    }
+
+    fn rol (&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32){
+        let ov = bus.read(addr);
+        let msb = ov & 0b10000000 != 0;
+        let v = (ov.rotate_left(1) & 0b11111110) | (self.status & 0b00000001);
+        bus.write(addr, v);
+        *ticks += 3;
+        self.rotate_set_status(v, msb);
     }
 
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
@@ -1085,22 +1107,51 @@ impl CPU {
                 0x48 => {
                     // PHA
                     self.pha(bus, &mut ticks);
-                    println!("Pushed the contense of the accumulator to the stack!")
+                    println!("Pushed the contense of the accumulator to the stack")
                 }
                 0x08 => {
                     // PHP
                     self.php(bus, &mut ticks);
-                    println!("Pushed the processor status to the stack!")
+                    println!("Pushed the processor status to the stack")
                 }
                 0x68 => {
                     // PLA
                     self.pla(bus, &mut ticks);
-                    println!("Got {:X} from the stack!", self.a);
+                    println!("Got {:X} from the stack", self.a);
                 }
                 0x28 => {
                     // PLP
                     self.plp(bus, &mut ticks);
-                    println!("Got {:X} from the stack!", self.status)
+                    println!("Got {:X} from the stack", self.status)
+                }
+                0x2A => {
+                    // ROL_ACC
+                    self.rol_a(&mut ticks);
+                    println!("Rotated the acc left")
+                }
+                0x26 => {
+                    // ROL_ZP
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.rol(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} left", addr);
+                }
+                0x36 => {
+                    // ROL_ZP_X
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.rol(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} left", addr);
+                }
+                0x2E => {
+                    // ROL_ABS
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.rol(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} left", addr);
+                }
+                0x3E => {
+                    // ROL_ABS_X
+                    let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                    self.rol(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} left", addr);
                 }
                 0xEA => {
                     // NOP
