@@ -21,7 +21,7 @@ impl CPU {
         self.x = 0;
         self.y = 0;
 
-        self.sp = 0x00FD;
+        self.sp = 0xFD;
         self.status = 0x24;
         self.set_pc(bus);
     }
@@ -178,11 +178,12 @@ impl CPU {
     }
 
     fn relative_adressing(&mut self, bus: &Bus, ticks: &mut u32){
-        let page = (self.pc >> 4) & 0x0F;
-        let value = i8::from_ne_bytes([self.immediate_adressing(bus, ticks)]);
-        self.pc = self.pc.wrapping_add_signed(value.into());
+        let old_pc = self.pc;
 
-        if page != (self.pc >> 4) & 0x0F{ // Crossed a page boundry
+        let offset = i8::from_ne_bytes([self.immediate_adressing(bus, ticks)]);
+        self.pc = self.pc.wrapping_add_signed(offset.into());
+
+        if (old_pc & 0xFF00) != (self.pc & 0xFF00) {
             *ticks += 1;
         }
     }
@@ -313,7 +314,8 @@ impl CPU {
         self.pc += 1;
         self.push_byte_stack(bus, (self.pc >> 8) as u8);
         self.push_byte_stack(bus, (self.pc & 0xFF) as u8);
-        self.push_byte_stack(bus, self.status);
+        let status = self.status | 0b00110000;
+        self.push_byte_stack(bus, status);
 
         self.pc = u16::from_le_bytes([bus.read(0xFFFE), bus.read(0xFFFF)]);
         *ticks += 7;
@@ -385,17 +387,19 @@ impl CPU {
     }
 
     fn php(&mut self, bus: &mut Bus, ticks: &mut u32){
-        self.push_byte_stack(bus, self.status);
+        let status = self.status | 0b00110000;
+        self.push_byte_stack(bus, status);
         *ticks += 2;
     }
 
     fn pla(&mut self, bus: &Bus, ticks: &mut u32){
         self.a = self.pull_byte_stack(bus);
+        self.ld_set_status(self.a);
         *ticks += 3;
     }
 
     fn plp(&mut self, bus: &Bus, ticks: &mut u32){
-        self.status = self.pull_byte_stack(bus);
+        self.status = self.pull_byte_stack(bus) | 0b00100000;
         *ticks += 3;
     }
 
@@ -972,7 +976,7 @@ impl CPU {
                 0x88 => {
                     // DEC_Y
                     self.decy(&mut ticks);
-                    println!("Decremented the y register to {:X}", self.x);
+                    println!("Decremented the y register to {:X}", self.y);
                 }
                 0x49 => {
                     // EOR_IMMEDIATE
