@@ -419,6 +419,24 @@ impl CPU {
         self.rotate_set_status(v, msb);
     }
 
+    fn ror_a(&mut self, ticks: &mut u32){
+        let lsb = self.a & 0b00000001 != 0;
+        let carry_in = (self.status & 0b00000001) != 0;
+        self.a = (self.a >> 1) | ((carry_in as u8) << 7);
+        *ticks += 1;
+        self.rotate_set_status(self.a, lsb);
+    }
+
+    fn ror(&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32){
+        let ov = bus.read(addr);
+        let lsb = ov & 0b00000001 != 0;
+        let carry_in = (self.status & 0b00000001) != 0;
+        let v = (ov >> 1) | ((carry_in as u8) << 7);
+        bus.write(addr, v);
+        *ticks += 3;
+        self.rotate_set_status(v, lsb);
+    }
+
     pub fn execute(&mut self, bus: &mut Bus, min_ticks: u32){
         let mut ticks  = 0;
         while min_ticks > ticks{
@@ -1156,6 +1174,35 @@ impl CPU {
                     let addr = self.get_absolute_adress_x(bus, &mut ticks);
                     self.rol(bus, addr as u16, &mut ticks);
                     println!("Rotated the {:X} left", addr);
+                }
+                0x6A => {
+                    // ROR_ACC
+                    self.ror_a(&mut ticks);
+                    println!("Rotated the acc right")
+                }
+                0x66 => {
+                    // ROR_ZP
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.ror(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} right", addr);
+                }
+                0x76 => {
+                    // ROR_ZP_X
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.ror(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} right", addr);
+                }
+                0x6E => {
+                    // ROR_ABS
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.ror(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} right", addr);
+                }
+                0x7E => {
+                    // ROR_ABS_X
+                    let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                    self.ror(bus, addr as u16, &mut ticks);
+                    println!("Rotated the {:X} right", addr);
                 }
                 0xEA => {
                     // NOP

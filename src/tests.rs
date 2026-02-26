@@ -1946,4 +1946,119 @@ mod tests {
         cpu.execute(&mut bus, 9);
         assert_eq!(bus.read(0x1003), 0x08); // 0x04 << 1
     }
+
+    #[test]
+    fn ror_accumulator_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x08);
+        bus.write(0x0002, 0x6A); // ROR accumulator
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x04); // 0x08 >> 1, carry was 0
+    }
+
+    #[test]
+    fn ror_accumulator_carry_in() {
+        let (mut cpu, mut bus) = init();
+        // Set carry via ADC overflow first
+        bus.write(0x0000, 0xA9); // LDA immediate - 2
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry - 2
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0xA9); // LDA immediate - 2
+        bus.write(0x0005, 0x08);
+        bus.write(0x0006, 0x6A); // ROR accumulator - carry rotates into bit 7 - 2
+        cpu.execute(&mut bus, 8);
+        assert_eq!(cpu.read_acc(), 0x84); // 0x08 >> 1 | carry(1) << 7 = 0x84
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn ror_accumulator_carry_out() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x01); // bit 0 set -> will shift into carry
+        bus.write(0x0002, 0x6A); // ROR accumulator
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x00); // 0x01 >> 1 = 0x00
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn ror_accumulator_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        // Set carry first so it rotates into bit 7
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0xA9); // LDA immediate
+        bus.write(0x0005, 0x00);
+        bus.write(0x0006, 0x6A); // ROR accumulator - carry into bit 7 sets N
+        cpu.execute(&mut bus, 8);
+        assert_eq!(cpu.read_acc(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn ror_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x08);
+        bus.write(0x0000, 0x66); // ROR zero page
+        bus.write(0x0001, 0x42);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0042), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn ror_zero_page_carry_in() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x08);
+        // Set carry first
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0x66); // ROR zero page
+        bus.write(0x0005, 0x42);
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x0042), 0x84); // 0x08 >> 1 | carry(1) << 7 = 0x84
+    }
+
+    #[test]
+    fn ror_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x08);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0x76); // ROR zero page, X
+        bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x0015), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn ror_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x08);
+        bus.write(0x0000, 0x6E); // ROR absolute
+        bus.write(0x0001, 0x34);
+        bus.write(0x0002, 0x12);
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn ror_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x08);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x03);
+        bus.write(0x0002, 0x7E); // ROR absolute, X
+        bus.write(0x0003, 0x00);
+        bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x1003), 0x04); // 0x08 >> 1
+    }
 }
