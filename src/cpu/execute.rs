@@ -770,12 +770,19 @@ impl CPU{
                     self.ror(bus, addr as u16, &mut ticks);
                     println!("Rotated the {:X} right", addr);
                 }
+                0x40 => {
+                    // RTI
+                    self.rti(bus, &mut ticks);
+                    println!("Returned from Interrupt");
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;
                     println!("NOP");
                 }
-                _ => {}
+                _ => {
+                    println!("Tried to execute unknown command!")
+                }
             }
         }
     }

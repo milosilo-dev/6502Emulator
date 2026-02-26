@@ -192,4 +192,13 @@ impl CPU{
         *ticks += 3;
         self.rotate_set_status(v, lsb);
     }
+
+    pub(super) fn rti(&mut self, bus: &mut Bus, ticks: &mut u32) {
+        *ticks += 5;
+        self.status = self.pull_byte_stack(bus);
+        self.set_status(false, 4);
+        let pc_lsb = self.pull_byte_stack(bus) as u16;
+        let pc_msb = self.pull_byte_stack(bus) as u16;
+        self.pc = pc_msb << 8 | pc_lsb;
+    }
 }

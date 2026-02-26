@@ -2061,4 +2061,61 @@ mod tests {
         cpu.execute(&mut bus, 9);
         assert_eq!(bus.read(0x1003), 0x04); // 0x08 >> 1
     }
+
+    #[test]
+    fn rti_restores_pc() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0xFFFE, 0x00);
+        bus.write(0xFFFF, 0x02); // IRQ vector -> 0x0200
+        bus.write(0x0000, 0x00); // BRK (7 ticks)
+        bus.write(0x0200, 0x40); // RTI at handler (6 ticks)
+        // BRK pushes PC+2 (0x0002) and status onto stack
+        // RTI should pull them back and resume at 0x0002
+        bus.write(0x0002, 0xA9); // LDA immediate at return address (2 ticks)
+        bus.write(0x0003, 0x42);
+        cpu.execute(&mut bus, 15); // 7 BRK + 6 RTI + 2 LDA = 15
+        assert_eq!(cpu.read_acc(), 0x42);
+    }
+
+    #[test]
+    fn rti_restores_status() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0xFFFE, 0x00);
+        bus.write(0xFFFF, 0x02); // IRQ vector -> 0x0200
+        // Set carry before BRK using ADC so we don't need SEC
+        bus.write(0x0000, 0xA9); // LDA immediate (2 ticks)
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x69); // ADC immediate - sets carry (2 ticks)
+        bus.write(0x0003, 0x01);
+        bus.write(0x0004, 0x00); // BRK (7 ticks)
+        bus.write(0x0200, 0x40); // RTI at handler (6 ticks)
+        bus.write(0x0006, 0xEA); // NOP at return address (2 ticks)
+        cpu.execute(&mut bus, 19); // 2 + 2 + 7 + 6 + 2 = 19
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C restored
+    }
+
+    #[test]
+    fn rti_restores_sp() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0xFFFE, 0x00);
+        bus.write(0xFFFF, 0x02); // IRQ vector -> 0x0200
+        bus.write(0x0000, 0x00); // BRK (7 ticks) - pushes 3 bytes, SP 0xFD -> 0xFA
+        bus.write(0x0200, 0x40); // RTI (6 ticks) - pulls 3 bytes, SP 0xFA -> 0xFD
+        bus.write(0x0002, 0xEA); // NOP at return address (2 ticks)
+        cpu.execute(&mut bus, 15); // 7 BRK + 6 RTI = 13, +2 NOP = 15
+        assert_eq!(cpu.read_sp(), 0xFD); // SP fully restored
+    }
+
+    #[test]
+    fn rti_ignores_b_flag_in_pulled_status() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0xFFFE, 0x00);
+        bus.write(0xFFFF, 0x02); // IRQ vector -> 0x0200
+        bus.write(0x0000, 0x00); // BRK (7 ticks)
+        bus.write(0x0200, 0x40); // RTI (6 ticks)
+        bus.write(0x0002, 0xEA); // NOP at return address (2 ticks)
+        cpu.execute(&mut bus, 15);
+        // B flag (bit 4) should not be set in the live status register after RTI
+        assert_eq!(cpu.read_status() & 0b00010000, 0); // B clear after RTI
+    }
 }
