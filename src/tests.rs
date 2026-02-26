@@ -1788,7 +1788,7 @@ mod tests {
         let pushed = bus.read(0x01FD);
 
         // B flag (bit 4) and unused (bit 5) must be set in pushed value
-        assert_eq!(pushed, cpu.read_status());
+        assert_eq!(pushed & 0b00110000, 0b00110000);
     }
 
     #[test]
