@@ -1,4 +1,4 @@
-use emulate6502::cpu::CPU;
+use emulate6502::cpu::cpu::CPU;
 use emulate6502::bus::Bus;
 use emulate6502::devices::mem::Mem;
 

@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::CPU;
+    use crate::cpu::cpu::CPU;
     use crate::bus::Bus;
     use crate::devices::mem::Mem;
 
