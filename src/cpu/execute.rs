@@ -775,6 +775,11 @@ impl CPU{
                     self.rti(bus, &mut ticks);
                     println!("Returned from Interrupt");
                 }
+                0x60 => {
+                    // RTS
+                    self.rts(bus, &mut ticks);
+                    println!("Returned from subroutine");
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;

@@ -201,4 +201,11 @@ impl CPU{
         let pc_msb = self.pull_byte_stack(bus) as u16;
         self.pc = pc_msb << 8 | pc_lsb;
     }
+
+    pub(super) fn rts(&mut self, bus: &mut Bus, ticks: &mut u32) {
+        *ticks += 5;
+        let pc_lsb = self.pull_byte_stack(bus) as u16;
+        let pc_msb = self.pull_byte_stack(bus) as u16;
+        self.pc = (pc_msb << 8 | pc_lsb).wrapping_add(1);
+    }
 }

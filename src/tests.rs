@@ -2118,4 +2118,69 @@ mod tests {
         // B flag (bit 4) should not be set in the live status register after RTI
         assert_eq!(cpu.read_status() & 0b00010000, 0); // B clear after RTI
     }
+
+    #[test]
+    fn rts_returns_from_subroutine() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x20); // JSR (6 ticks)
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02); // target = 0x0200
+        bus.write(0x0200, 0x60); // RTS (6 ticks)
+        bus.write(0x0003, 0xA9); // LDA immediate at return address (2 ticks)
+        bus.write(0x0004, 0x42);
+        cpu.execute(&mut bus, 14); // 6 JSR + 6 RTS + 2 LDA
+        assert_eq!(cpu.read_acc(), 0x42);
+    }
+
+    #[test]
+    fn rts_restores_sp() {
+        let (mut cpu, mut bus) = init();
+        let sp_before = cpu.read_sp();
+        bus.write(0x0000, 0x20); // JSR (6 ticks) - SP decrements by 2
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02);
+        bus.write(0x0200, 0x60); // RTS (6 ticks) - SP increments by 2
+        bus.write(0x0003, 0xEA); // NOP at return address (2 ticks)
+
+        cpu.execute(&mut bus, 14);
+        assert_eq!(cpu.read_sp(), sp_before); // SP back to original value
+    }
+
+    #[test]
+    fn rts_nested_subroutines() {
+        let (mut cpu, mut bus) = init();
+        // JSR from 0x0000 -> 0x0200
+        bus.write(0x0000, 0x20); // JSR (6 ticks)
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02);
+        // JSR from 0x0200 -> 0x0300
+        bus.write(0x0200, 0x20); // JSR (6 ticks)
+        bus.write(0x0201, 0x00);
+        bus.write(0x0202, 0x03);
+        // RTS at 0x0300 -> back to 0x0203
+        bus.write(0x0300, 0x60); // RTS (6 ticks)
+        // RTS at 0x0203 -> back to 0x0003
+        bus.write(0x0203, 0x60); // RTS (6 ticks)
+        // LDA at return address
+        bus.write(0x0003, 0xA9); // LDA immediate (2 ticks)
+        bus.write(0x0004, 0x42);
+        cpu.execute(&mut bus, 26); // 6 + 6 + 6 + 6 + 2
+        assert_eq!(cpu.read_acc(), 0x42);
+    }
+
+    #[test]
+    fn rts_increments_pulled_address() {
+        let (mut cpu, mut bus) = init();
+        // JSR pushes PC-1 (0x0002), RTS pulls it and adds 1 -> resumes at 0x0003
+        bus.write(0x0000, 0x20); // JSR at 0x0000 (6 ticks)
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x02); // target = 0x0200
+        bus.write(0x0200, 0x60); // RTS (6 ticks)
+        bus.write(0x0003, 0xA9); // LDA immediate - this is what we should land on
+        bus.write(0x0004, 0x01);
+        bus.write(0x0005, 0xA9); // LDA immediate - wrong landing address
+        bus.write(0x0006, 0xFF);
+        cpu.execute(&mut bus, 14);
+        assert_eq!(cpu.read_acc(), 0x01); // landed on 0x0003 not 0x0002 or 0x0005
+    }
 }
