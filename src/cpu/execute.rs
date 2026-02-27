@@ -888,6 +888,42 @@ impl CPU{
                     self.sta(bus, addr, &mut ticks);
                     println!("Stored Acc at {:X}", addr);
                 }
+                0x86 => {
+                    // STX_ZERO_PAGE
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.stx(bus, addr, &mut ticks);
+                    println!("Stored X at {:X}", addr);
+                }
+                0x96 => {
+                    // STX_ZERO_PAGE_Y
+                    let addr = self.get_zp_adress_y(bus, &mut ticks);
+                    self.stx(bus, addr, &mut ticks);
+                    println!("Stored X at {:X}", addr);
+                }
+                0x8E => {
+                    // STX_ABSOLUTE
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.stx(bus, addr, &mut ticks);
+                    println!("Stored X at {:X}", addr);
+                }
+                0x84 => {
+                    // STY_ZERO_PAGE
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.sty(bus, addr, &mut ticks);
+                    println!("Stored Y at {:X}", addr);
+                }
+                0x94 => {
+                    // STY_ZERO_PAGE_X
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.sty(bus, addr, &mut ticks);
+                    println!("Stored Y at {:X}", addr);
+                }
+                0x8C => {
+                    // STY_ABSOLUTE
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.sty(bus, addr, &mut ticks);
+                    println!("Stored Y at {:X}", addr);
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;

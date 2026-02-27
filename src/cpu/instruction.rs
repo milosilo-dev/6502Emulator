@@ -242,4 +242,10 @@ impl CPU{
         bus.write(addr, self.y);
         *ticks += 1;
     }
+
+    pub(super) fn tax(&mut self, ticks: &mut u32) {
+        self.x = self.a;
+        self.transfer_set_status(self.x);
+        *ticks += 1;
+    }
 }

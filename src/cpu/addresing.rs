@@ -29,6 +29,11 @@ impl CPU{
         self.fetch_byte(bus).wrapping_add(self.x) as u16
     }
 
+    pub(super) fn get_zp_adress_y(&mut self, bus: &Bus, ticks: &mut u32) -> u16{
+        *ticks += 2;
+        self.fetch_byte(bus).wrapping_add(self.y) as u16
+    }
+
     pub(super) fn zero_page_adressing_x(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
         let addr = self.get_zp_adress_x(bus, ticks);
         *ticks += 1;
@@ -36,7 +41,7 @@ impl CPU{
     }
 
     pub(super) fn zero_page_adressing_y(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
-        let addr = self.fetch_byte(bus).wrapping_add(self.y);
+        let addr = self.get_zp_adress_y(bus, ticks);
         *ticks += 3;
         Self::read_byte(bus, addr as u16)
     }

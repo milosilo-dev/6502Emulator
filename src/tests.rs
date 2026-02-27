@@ -2547,4 +2547,79 @@ mod tests {
         cpu.execute(&mut bus, 10);
         assert_eq!(bus.read(0x3002), 0x42);
     }
+
+
+    #[test]
+    fn stx_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x86); // STX zero page
+        bus.write(0x0003, 0x50);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0050), 0x42);
+        assert_eq!(cpu.read_x(), 0x42); // X unchanged
+    }
+
+    #[test]
+    fn stx_zero_page_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA0); // LDY immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x96); // STX zero page, Y
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 8);
+        assert_eq!(bus.read(0x0015), 0x42);
+    }
+
+    #[test]
+    fn stx_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x8E); // STX absolute
+        bus.write(0x0003, 0x34);
+        bus.write(0x0004, 0x12); // target = 0x1234
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x42);
+    }
+
+    #[test]
+    fn sty_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x84); // STY zero page
+        bus.write(0x0003, 0x50);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0050), 0x42);
+        assert_eq!(cpu.read_y(), 0x42); // Y unchanged
+    }
+
+    #[test]
+    fn sty_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x94); // STY zero page, X
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 8);
+        assert_eq!(bus.read(0x0015), 0x42);
+    }
+
+    #[test]
+    fn sty_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x8C); // STY absolute
+        bus.write(0x0003, 0x34);
+        bus.write(0x0004, 0x12); // target = 0x1234
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x42);
+    }
 }
