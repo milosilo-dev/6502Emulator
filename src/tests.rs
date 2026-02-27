@@ -2183,4 +2183,217 @@ mod tests {
         cpu.execute(&mut bus, 14);
         assert_eq!(cpu.read_acc(), 0x01); // landed on 0x0003 not 0x0002 or 0x0005
     }
+
+    #[test]
+    fn sec_sets_carry() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC
+        cpu.execute(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+    }
+
+    #[test]
+    fn sec_does_not_affect_other_flags() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x38); // SEC
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
+    }
+
+    #[test]
+    fn sec_idempotent() {
+        let (mut cpu, mut bus) = init();
+        // Setting carry twice should leave it set
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0x38); // SEC again
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C still set
+    }
+
+    #[test]
+    fn sbc_immediate_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC - must set carry before SBC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x05);
+        cpu.execute(&mut bus, 7); // 2 SEC + 2 LDA + 2 SBC + 1 fetch
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+        #[test]
+    fn sbc_immediate_carry_clear_after_borrow() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x05);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x10); // A < M -> borrow -> carry clear
+        cpu.execute(&mut bus, 6);
+        assert_eq!(cpu.read_acc(), 0xF5); // 0x05 - 0x10 wraps
+        assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (borrow)
+    }
+
+    #[test]
+    fn sbc_immediate_carry_set_no_borrow() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x05); // A >= M -> no borrow -> carry set
+        cpu.execute(&mut bus, 7);
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (no borrow)
+    }
+
+    #[test]
+    fn sbc_immediate_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x42);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x42); // A == M -> result 0 -> Z set
+        cpu.execute(&mut bus, 7);
+        assert_eq!(cpu.read_acc(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn sbc_immediate_overflow() {
+        let (mut cpu, mut bus) = init();
+        // 0xD0 - 0x70: negative - positive = positive result, overflow
+        // -48 - 112 = -160, too negative to fit in signed byte, wraps to positive
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0xD0);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x70);
+        cpu.execute(&mut bus, 7);
+        assert_eq!(cpu.read_status() & 0b01000000, 0b01000000); // V set
+    }
+
+    #[test]
+    fn sbc_immediate_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x05);
+        bus.write(0x0003, 0xE9); // SBC immediate
+        bus.write(0x0004, 0x10); // result has bit 7 set
+        cpu.execute(&mut bus, 7);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn sbc_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0050, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xE5); // SBC zero page
+        bus.write(0x0004, 0x50);
+        cpu.execute(&mut bus, 8); // 2 + 2 + 3 + fetch
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xA2); // LDX immediate
+        bus.write(0x0004, 0x05);
+        bus.write(0x0005, 0xF5); // SBC zero page, X
+        bus.write(0x0006, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 11);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xED); // SBC absolute
+        bus.write(0x0004, 0x34);
+        bus.write(0x0005, 0x12);
+        cpu.execute(&mut bus, 9);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xA2); // LDX immediate
+        bus.write(0x0004, 0x03);
+        bus.write(0x0005, 0xFD); // SBC absolute, X
+        bus.write(0x0006, 0x00);
+        bus.write(0x0007, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 13);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_absolute_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1002, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xA0); // LDY immediate
+        bus.write(0x0004, 0x02);
+        bus.write(0x0005, 0xF9); // SBC absolute, Y
+        bus.write(0x0006, 0x00);
+        bus.write(0x0007, 0x10); // 0x1000 + 0x02 = 0x1002
+        cpu.execute(&mut bus, 13);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_indirect_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x00); // lo byte of target
+        bus.write(0x0016, 0x30); // hi byte of target -> 0x3000
+        bus.write(0x3000, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xA2); // LDX immediate
+        bus.write(0x0004, 0x05);
+        bus.write(0x0005, 0xE1); // SBC indirect, X
+        bus.write(0x0006, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 15);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
+
+    #[test]
+    fn sbc_indirect_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0020, 0x00); // lo byte of base
+        bus.write(0x0021, 0x30); // hi byte of base -> 0x3000
+        bus.write(0x3002, 0x05);
+        bus.write(0x0000, 0x38); // SEC
+        bus.write(0x0001, 0xA9); // LDA immediate
+        bus.write(0x0002, 0x10);
+        bus.write(0x0003, 0xA0); // LDY immediate
+        bus.write(0x0004, 0x02);
+        bus.write(0x0005, 0xF1); // SBC indirect, Y
+        bus.write(0x0006, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
+        cpu.execute(&mut bus, 14);
+        assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    }
 }

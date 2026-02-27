@@ -25,7 +25,7 @@ impl CPU{
         let a = self.a as u16;
         let v = value as u16;
 
-        let sum = a + v + carry_in;
+        let sum = a.wrapping_add(v).wrapping_add(carry_in);
 
         let result = (sum & 0xFF) as u8;
 
@@ -207,5 +207,24 @@ impl CPU{
         let pc_lsb = self.pull_byte_stack(bus) as u16;
         let pc_msb = self.pull_byte_stack(bus) as u16;
         self.pc = (pc_msb << 8 | pc_lsb).wrapping_add(1);
+    }
+
+    pub(super) fn sbc(&mut self, value: u8) {
+        let carry_in =  (1-(self.status & 0x01)) as u16;
+
+        let a = self.a as u16;
+        let v = value as u16;
+
+        let sum = a.wrapping_sub(v).wrapping_sub(carry_in);
+
+        let result = (sum & 0xFF) as u8;
+
+        let carry_out = sum < 0b01111111;
+
+        let overflow =
+            ((self.a ^ value) & (self.a ^ result) & 0x80) != 0;
+
+        self.a = result;
+        self.sbc_set_status(carry_out, overflow);
     }
 }

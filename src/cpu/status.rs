@@ -67,4 +67,11 @@ impl CPU{
         self.set_status(value == 0, 1); // set z flag
         self.set_status((value & 0b10000000) > 0, 7); // set n flag
     }
+
+    pub(super) fn sbc_set_status(&mut self, carry_out: bool, is_over: bool){
+        self.set_status(carry_out && !is_over, 0); // set c flag
+        self.set_status(self.a == 0, 1); // set z flag
+        self.set_status(is_over, 6); // set v
+        self.set_status((self.a & 0b10000000) > 0, 7); // set n flag
+    }
 }

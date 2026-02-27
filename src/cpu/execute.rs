@@ -780,6 +780,60 @@ impl CPU{
                     self.rts(bus, &mut ticks);
                     println!("Returned from subroutine");
                 }
+                0x38 => {
+                    // SEC
+                    self.set_status(true, 0);
+                    ticks += 1;
+                    println!("Set carry flag");
+                }
+                0xE9 => {
+                    // SBC_IMMD
+                    let value = self.immediate_adressing(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xE5 => {
+                    // SBC_ZP
+                    let value = self.zero_page_adressing(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xF5 => {
+                    // SBC_ZP_X
+                    let value = self.zero_page_adressing_x(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xED => {
+                    // SBC_ABSOLUTE
+                    let value = self.absolute_adressing(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xFD => {
+                    // SBC_ABSOLUTE_X
+                    let value = self.absolute_adressing_x(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xF9 => {
+                    // SBC_ABSOLUTE_Y
+                    let value = self.absolute_adressing_y(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xE1 => {
+                    // SBC_INDIRECT_X
+                    let value = self.indirect_indexing_adressing_x(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
+                0xF1 => {
+                    // SBC_INDIRECT_Y
+                    let value = self.indexing_indirect_adressing_y(bus, &mut ticks);
+                    self.sbc(value);
+                    println!("Subtracted {:X} from the acc", value);
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;
