@@ -45,7 +45,6 @@ It should also be noted that the test framework and thus the first few tests bui
 
 - The original 6502 page-boundary indirect JMP bug is not currently emulated:  
   > The real 6502 incorrectly fetches the high byte of the target address if the indirect vector falls on a page boundary.
-- Not all instructions are implemented yet (see below).
 - Not every physical pin of the real 6502 is exposed as a public function on the CPU struct.
 - The current `execute()` function will likely be replaced with a `step()` function that:
   - Executes exactly one instruction at the current PC
@@ -75,8 +74,7 @@ It should also be noted that the test framework and thus the first few tests bui
 ---
 
 ## Roadmap
-
-- [ ] Implement remaining instructions  
+ 
 - [ ] Add optional emulation of original hardware quirks  
 - [ ] Convert `execute()` → `step()` API  
 - [ ] Improve code structure & formatting  
