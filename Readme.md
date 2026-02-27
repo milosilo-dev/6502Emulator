@@ -54,7 +54,7 @@ It should also be noted that the test framework and thus the first few tests bui
 
 ---
 
-## Implemented Instructions (42 / 56)
+## Implemented Instructions (44 / 56)
 
 | ADC | AND | ASL | BCC |
 |-----|-----|-----|-----|
@@ -67,7 +67,7 @@ It should also be noted that the test framework and thus the first few tests bui
 | JSR | LDA | LDX | LDY |
 | NOP | ORA | PHA | PHP |
 | PLA | PLP | ROL | ROR |
-| RTI | RTS |     |     |
+| RTI | RTS | SEC | SBC |
 
 ---
 

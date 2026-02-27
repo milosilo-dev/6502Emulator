@@ -786,6 +786,18 @@ impl CPU{
                     ticks += 1;
                     println!("Set carry flag");
                 }
+                0xF8 => {
+                    // SED
+                    self.set_status(true, 3);
+                    ticks += 1;
+                    println!("Set decimal flag");
+                }
+                0x78 => {
+                    // SEI
+                    self.set_status(true, 2);
+                    ticks += 1;
+                    println!("Set interrupt disable");
+                }
                 0xE9 => {
                     // SBC_IMMD
                     let value = self.immediate_adressing(bus, &mut ticks);
