@@ -2766,13 +2766,12 @@ mod tests {
     #[test]
     fn tsx_negative_flag() {
         let (mut cpu, mut bus) = init();
-        // SP starts at 0x00 from default, push something to move it to a known value
-        // Use PHA to decrement SP after loading A with a value that puts SP at 0x80+ range
-        // Instead just check that N is set when SP has bit 7 set via a known SP value
-        // SP from default() is 0x00, TSX transfers 0x00 -> Z set
+        // SP is 0xFD after reset, bit 7 set -> N set
         bus.write(0x0000, 0xBA); // TSX
         cpu.execute(&mut bus, 2);
-        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (SP is 0x00)
+        assert_eq!(cpu.read_x(), 0xFD);
+        assert_eq!(cpu.read_sp(), 0xFD); // SP unchanged
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
     #[test]
@@ -2789,15 +2788,15 @@ mod tests {
     #[test]
     fn txs_does_not_set_flags() {
         let (mut cpu, mut bus) = init();
-        // Load 0x00 into X then TXS - flags should NOT be set unlike TSX
-        bus.write(0x0000, 0xA9); // LDA immediate - set N flag
-        bus.write(0x0001, 0x80);
-        bus.write(0x0002, 0xA2); // LDX immediate
-        bus.write(0x0003, 0x00);
-        bus.write(0x0004, 0x9A); // TXS - should not clear N or set Z
-        cpu.execute(&mut bus, 7);
+        // LDX first, then LDA to set N last so it's still set when TXS runs
+        bus.write(0x0000, 0xA2); // LDX immediate (2 ticks)
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0xA9); // LDA immediate - set N flag (2 ticks)
+        bus.write(0x0003, 0x80);
+        bus.write(0x0004, 0x9A); // TXS (2 ticks) - should not clear N or set Z
+        cpu.execute(&mut bus, 6);
         assert_eq!(cpu.read_sp(), 0x00);
-        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set (TXS didn't touch flags)
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
         assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z not set
     }
 }
