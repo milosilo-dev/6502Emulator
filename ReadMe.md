@@ -33,7 +33,9 @@ The goal is to make this usable as the heart of a full 8-bit system emulator.
 
 Every implemented instruction has a dedicated test.
 
-All tests were generated using AI to ensure they match the *real* 6502 behaviour — not just assumptions about how the CPU should work.  
+All tests were generated using AI to ensure they match the *real* 6502 behaviour — not just my assumptions about how the CPU should work. I have read through each test case to make sure that there is no hallucinations in the tests.
+
+It should also be noted that the test framework and thus the first few tests build are built by me in order to give the AI some idea of what I wanted.
 
 > The rest of the emulator code is entirely AI-free
 
@@ -52,7 +54,7 @@ All tests were generated using AI to ensure they match the *real* 6502 behaviour
 
 ---
 
-## Implemented Instructions (39 / 56)
+## Implemented Instructions (56 / 56)
 
 | ADC | AND | ASL | BCC |
 |-----|-----|-----|-----|
@@ -65,6 +67,10 @@ All tests were generated using AI to ensure they match the *real* 6502 behaviour
 | JSR | LDA | LDX | LDY |
 | NOP | ORA | PHA | PHP |
 | PLA | PLP | ROL | ROR |
+| RTI | RTS | SEC | SBC |
+| SED | SEI | STA | STX |
+| STY | TAX | TAY | TSX |
+| TXA | TXS | TYA |     |
 
 ---
 
