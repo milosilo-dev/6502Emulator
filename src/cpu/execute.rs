@@ -846,6 +846,48 @@ impl CPU{
                     self.sbc(value);
                     println!("Subtracted {:X} from the acc", value);
                 }
+                0x85 => {
+                    // STA_ZERO_PAGE
+                    let addr = self.get_zp_adress(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x95 => {
+                    // STA_ZERO_PAGE_X
+                    let addr = self.get_zp_adress_x(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x8D => {
+                    // STA_ABSOLUTE
+                    let addr = self.get_absolute_adress(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x9D => {
+                    // STA_ABSOLUTE_X
+                    let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x99 => {
+                    // STA_ABSOLUTE_Y
+                    let addr = self.get_absolute_adress_y(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x81 => {
+                    // STA_INDIRECT_X
+                    let addr = self.get_indirect_indexing_adress(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
+                0x91 => {
+                    // STA_INDIRECT_Y
+                    let addr = self.get_indexing_indirect_adress(bus, &mut ticks);
+                    self.sta(bus, addr, &mut ticks);
+                    println!("Stored Acc at {:X}", addr);
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;

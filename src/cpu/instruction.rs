@@ -227,4 +227,19 @@ impl CPU{
         self.a = result;
         self.sbc_set_status(carry_out, overflow);
     }
+
+    pub(super) fn sta(&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32) {
+        bus.write(addr, self.a);
+        *ticks += 1;
+    }
+
+    pub(super) fn stx(&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32) {
+        bus.write(addr, self.x);
+        *ticks += 1;
+    }
+
+    pub(super) fn sty(&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32) {
+        bus.write(addr, self.y);
+        *ticks += 1;
+    }
 }

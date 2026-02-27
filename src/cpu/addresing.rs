@@ -67,6 +67,10 @@ impl CPU{
         self.get_absolute_adress(bus, ticks).wrapping_add(self.x as u16)
     }
 
+    pub(super) fn get_absolute_adress_y(&mut self, bus: &Bus, ticks: &mut u32) -> u16{
+        self.get_absolute_adress(bus, ticks).wrapping_add(self.y as u16)
+    }
+
     pub(super) fn absolute_adressing_x(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
         let base = self.get_absolute_adress(bus, ticks);
         let addr = base.wrapping_add(self.x as u16);
@@ -100,17 +104,22 @@ impl CPU{
         ((addr_hi as u16) << 8) | (addr_lo as u16)
     }
 
-    pub(super) fn indirect_indexing_adressing_x(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
+    pub(super) fn get_indirect_indexing_adress(&mut self, bus: &Bus, ticks: &mut u32) -> u16 {
         let zp_addr = self.fetch_byte(bus).wrapping_add(self.x);
         let lsb_addr = Self::read_byte(bus, zp_addr as u16);
         let msb_addr = Self::read_byte(bus, zp_addr as u16 + 1);
-        let addr = ((msb_addr as u16) << 8) | (lsb_addr as u16);
+        *ticks += 5;
 
-        *ticks += 6;
+        ((msb_addr as u16) << 8) | (lsb_addr as u16)
+    }
+
+    pub(super) fn indirect_indexing_adressing_x(&mut self, bus: &Bus, ticks: &mut u32) -> u8{
+        let addr = self.get_indirect_indexing_adress(bus, ticks);
+        *ticks += 1;
         Self::read_byte(bus, addr)
     }
 
-    pub(super) fn indexing_indirect_adressing_y(&mut self, bus: &Bus, ticks: &mut u32) -> u8 {
+    pub(super) fn get_indexing_indirect_adress(&mut self, bus: &Bus, ticks: &mut u32) -> u16 {
         let zp = self.fetch_byte(bus);
 
         let lo = Self::read_byte(bus, zp as u16) as u16;
@@ -123,7 +132,13 @@ impl CPU{
             *ticks += 1;
         }
 
-        *ticks += 5;
+        *ticks += 4;
+        addr
+    }
+
+    pub(super) fn indexing_indirect_adressing_y(&mut self, bus: &Bus, ticks: &mut u32) -> u8 {
+        let addr = self.get_indexing_indirect_adress(bus, ticks);
+        *ticks += 1;
         Self::read_byte(bus, addr as u16)
     }
 }

@@ -2395,5 +2395,156 @@ mod tests {
         bus.write(0x0006, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
         cpu.execute(&mut bus, 14);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
+    } 
+
+    #[test]
+    fn sed_sets_decimal() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xF8); // SED
+        cpu.execute(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D set
+    }
+
+    #[test]
+    fn sed_does_not_affect_other_flags() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0xF8); // SED
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
+    }
+
+    #[test]
+    fn sed_idempotent() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xF8); // SED
+        bus.write(0x0001, 0xF8); // SED again
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D still set
+    }
+
+    #[test]
+    fn sei_sets_interrupt_disable() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x78); // SEI
+        cpu.execute(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I set
+    }
+
+    #[test]
+    fn sei_does_not_affect_other_flags() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x78); // SEI
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I set
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
+    }
+
+    #[test]
+    fn sei_idempotent() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0x78); // SEI
+        bus.write(0x0001, 0x78); // SEI again
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I still set
+    }
+
+    #[test]
+    fn sta_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x85); // STA zero page
+        bus.write(0x0003, 0x50);
+        cpu.execute(&mut bus, 5);
+        assert_eq!(bus.read(0x0050), 0x42);
+        assert_eq!(cpu.read_acc(), 0x42); // A unchanged
+    }
+
+    #[test]
+    fn sta_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x95); // STA zero page, X
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 8);
+        assert_eq!(bus.read(0x0015), 0x42);
+    }
+
+    #[test]
+    fn sta_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x8D); // STA absolute
+        bus.write(0x0003, 0x34);
+        bus.write(0x0004, 0x12); // target = 0x1234
+        cpu.execute(&mut bus, 6);
+        assert_eq!(bus.read(0x1234), 0x42);
+    }
+
+    #[test]
+    fn sta_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x03);
+        bus.write(0x0004, 0x9D); // STA absolute, X
+        bus.write(0x0005, 0x00);
+        bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x1003), 0x42);
+    }
+
+    #[test]
+    fn sta_absolute_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA0); // LDY immediate
+        bus.write(0x0003, 0x02);
+        bus.write(0x0004, 0x99); // STA absolute, Y
+        bus.write(0x0005, 0x00);
+        bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
+        cpu.execute(&mut bus, 9);
+        assert_eq!(bus.read(0x1002), 0x42);
+    }
+
+    #[test]
+    fn sta_indirect_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x00); // lo byte of target
+        bus.write(0x0016, 0x30); // hi byte of target -> 0x3000
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x05);
+        bus.write(0x0004, 0x81); // STA indirect, X
+        bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.execute(&mut bus, 10);
+        assert_eq!(bus.read(0x3000), 0x42);
+    }
+
+    #[test]
+    fn sta_indirect_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0020, 0x00); // lo byte of base
+        bus.write(0x0021, 0x30); // hi byte of base -> 0x3000
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA0); // LDY immediate
+        bus.write(0x0003, 0x02);
+        bus.write(0x0004, 0x91); // STA indirect, Y
+        bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
+        cpu.execute(&mut bus, 10);
+        assert_eq!(bus.read(0x3002), 0x42);
     }
 }
