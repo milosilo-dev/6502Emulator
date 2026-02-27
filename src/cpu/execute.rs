@@ -924,6 +924,36 @@ impl CPU{
                     self.sty(bus, addr, &mut ticks);
                     println!("Stored Y at {:X}", addr);
                 }
+                0xAA => {
+                    // TAX
+                    self.tax(&mut ticks);
+                    println!("Tranfered A into X regiser");
+                }
+                0xA8 => {
+                    // TAY
+                    self.tay(&mut ticks);
+                    println!("Tranfered A into Y regiser");
+                }
+                0xBA => {
+                    // TSX
+                    self.tsx(&mut ticks);
+                    println!("Tranfered SP into X regiser");
+                }
+                0x8A => {
+                    // TXA
+                    self.txa(&mut ticks);
+                    println!("Tranfered X into A regiser");
+                }
+                0x9A => {
+                    // TXS
+                    self.txs(&mut ticks);
+                    println!("Tranfered X into S regiser");
+                }
+                0x98 => {
+                    // TYA
+                    self.tya(&mut ticks);
+                    println!("Tranfered Y into A regiser");
+                }
                 0xEA => {
                     // NOP
                     ticks += 1;

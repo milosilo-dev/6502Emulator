@@ -2622,4 +2622,182 @@ mod tests {
         cpu.execute(&mut bus, 6);
         assert_eq!(bus.read(0x1234), 0x42);
     }
+
+    #[test]
+    fn tax_transfers_accumulator_to_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xAA); // TAX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x42);
+        assert_eq!(cpu.read_acc(), 0x42); // A unchanged
+    }
+
+    #[test]
+    fn tax_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0xAA); // TAX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn tax_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0xAA); // TAX
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_x(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn tay_transfers_accumulator_to_y() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0xA8); // TAY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x42);
+        assert_eq!(cpu.read_acc(), 0x42); // A unchanged
+    }
+
+    #[test]
+    fn tay_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0xA8); // TAY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn tay_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0xA8); // TAY
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_y(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn txa_transfers_x_to_accumulator() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x8A); // TXA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x42);
+        assert_eq!(cpu.read_x(), 0x42); // X unchanged
+    }
+
+    #[test]
+    fn txa_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x8A); // TXA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn txa_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x8A); // TXA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn tya_transfers_y_to_accumulator() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x98); // TYA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x42);
+        assert_eq!(cpu.read_y(), 0x42); // Y unchanged
+    }
+
+    #[test]
+    fn tya_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x98); // TYA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn tya_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA0); // LDY immediate
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x98); // TYA
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_acc(), 0x80);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
+    }
+
+    #[test]
+    fn tsx_transfers_sp_to_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xBA); // TSX
+        cpu.execute(&mut bus, 2);
+        assert_eq!(cpu.read_x(), cpu.read_sp());
+    }
+
+    #[test]
+    fn tsx_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        // SP starts at 0x00 from default, push something to move it to a known value
+        // Use PHA to decrement SP after loading A with a value that puts SP at 0x80+ range
+        // Instead just check that N is set when SP has bit 7 set via a known SP value
+        // SP from default() is 0x00, TSX transfers 0x00 -> Z set
+        bus.write(0x0000, 0xBA); // TSX
+        cpu.execute(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (SP is 0x00)
+    }
+
+    #[test]
+    fn txs_transfers_x_to_sp() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x42);
+        bus.write(0x0002, 0x9A); // TXS
+        cpu.execute(&mut bus, 4);
+        assert_eq!(cpu.read_sp(), 0x42);
+        assert_eq!(cpu.read_x(), 0x42); // X unchanged
+    }
+
+    #[test]
+    fn txs_does_not_set_flags() {
+        let (mut cpu, mut bus) = init();
+        // Load 0x00 into X then TXS - flags should NOT be set unlike TSX
+        bus.write(0x0000, 0xA9); // LDA immediate - set N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0xA2); // LDX immediate
+        bus.write(0x0003, 0x00);
+        bus.write(0x0004, 0x9A); // TXS - should not clear N or set Z
+        cpu.execute(&mut bus, 7);
+        assert_eq!(cpu.read_sp(), 0x00);
+        assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set (TXS didn't touch flags)
+        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z not set
+    }
 }

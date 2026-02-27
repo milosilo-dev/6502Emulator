@@ -248,4 +248,33 @@ impl CPU{
         self.transfer_set_status(self.x);
         *ticks += 1;
     }
+
+    pub(super) fn tay(&mut self, ticks: &mut u32) {
+        self.y = self.a;
+        self.transfer_set_status(self.y);
+        *ticks += 1;
+    }
+
+    pub(super) fn tsx(&mut self, ticks: &mut u32) {
+        self.x = self.sp;
+        self.transfer_set_status(self.x);
+        *ticks += 1;
+    }
+
+    pub(super) fn txa(&mut self, ticks: &mut u32) {
+        self.a = self.x;
+        self.transfer_set_status(self.a);
+        *ticks += 1;
+    }
+
+    pub(super) fn txs(&mut self, ticks: &mut u32) {
+        self.sp = self.x;
+        *ticks += 1;
+    }
+
+    pub(super) fn tya(&mut self, ticks: &mut u32) {
+        self.a = self.y;
+        self.transfer_set_status(self.a);
+        *ticks += 1;
+    }
 }
