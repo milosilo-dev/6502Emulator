@@ -1,4 +1,4 @@
-use crate::bus::Bus;
+use crate::{bus::Bus, cpu::config::CpuConfig};
 
 pub struct CPU {
     pub(super) pc: u16,
@@ -9,6 +9,8 @@ pub struct CPU {
     pub(super) y: u8,
 
     pub(super) status: u8,
+
+    pub config: CpuConfig,
 }
 
 impl CPU {
@@ -20,6 +22,7 @@ impl CPU {
             x: 0,
             y: 0,
             status: 0,
+            config: CpuConfig::default(),
         }
     }
 
