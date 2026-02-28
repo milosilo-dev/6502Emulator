@@ -5,18 +5,18 @@ pub struct Mem {
 }
 
 impl Mem {
-    pub fn default() -> Self{
-        Self{
-            data: [0 as u8; 1024 * 64]
+    pub fn default() -> Self {
+        Self {
+            data: [0 as u8; 1024 * 64],
         }
     }
 
-    pub fn len(&self) -> usize{
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 }
 
-impl Device for Mem{
+impl Device for Mem {
     fn read(&self, addr: u16) -> u8 {
         self.data[addr as usize]
     }

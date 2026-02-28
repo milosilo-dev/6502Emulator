@@ -1,5 +1,5 @@
-use emulate6502::cpu::cpu::CPU;
 use emulate6502::bus::Bus;
+use emulate6502::cpu::cpu::CPU;
 use emulate6502::devices::mem::Mem;
 
 fn main() {
@@ -17,5 +17,5 @@ fn main() {
     bus.write(0x0003, 0x45);
 
     cpu.reset(&bus);
-    cpu.execute(&mut bus, 10);
+    cpu.step(&mut bus, 2);
 }

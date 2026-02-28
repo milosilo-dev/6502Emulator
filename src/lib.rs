@@ -1,5 +1,5 @@
-pub mod cpu;
 pub mod bus;
+pub mod cpu;
 pub mod devices;
-pub mod tests;
 pub mod platform;
+pub mod tests;

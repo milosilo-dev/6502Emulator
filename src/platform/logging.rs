@@ -1,3 +1,3 @@
-pub fn log(msg: String){
+pub fn log(msg: String) {
     println!("{}", msg);
 }

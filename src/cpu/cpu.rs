@@ -12,11 +12,18 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn default() -> Self{
-        Self { pc: 0, sp: 0, a: 0, x: 0, y: 0, status: 0 }
+    pub fn default() -> Self {
+        Self {
+            pc: 0,
+            sp: 0,
+            a: 0,
+            x: 0,
+            y: 0,
+            status: 0,
+        }
     }
 
-    pub fn reset(&mut self, bus: &Bus ){
+    pub fn reset(&mut self, bus: &Bus) {
         self.a = 0;
         self.x = 0;
         self.y = 0;

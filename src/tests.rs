@@ -3,8 +3,8 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::cpu::CPU;
     use crate::bus::Bus;
+    use crate::cpu::cpu::CPU;
     use crate::devices::mem::Mem;
 
     fn init() -> (CPU, Bus) {
@@ -24,7 +24,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x69);
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_acc(), 0x69);
     }
 
@@ -33,7 +33,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xA9); // LDA immediate #0 -> sets Z flag
         bus.write(0x0001, 0x00);
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_acc(), 0x00);
     }
 
@@ -43,7 +43,7 @@ mod tests {
         bus.write(0x0042, 0xAB); // value in zero page
         bus.write(0x0000, 0xA5); // LDA zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_acc(), 0xAB);
     }
 
@@ -55,7 +55,7 @@ mod tests {
         bus.write(0x0002, 0xB5); // LDA zero page, X
         bus.write(0x0003, 0x10);
         bus.write(0x0015, 0x77); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x77);
     }
 
@@ -66,7 +66,7 @@ mod tests {
         bus.write(0x0000, 0xAD); // LDA absolute
         bus.write(0x0001, 0x34);
         bus.write(0x0002, 0x12);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_acc(), 0xBE);
     }
 
@@ -79,7 +79,7 @@ mod tests {
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x10);
         bus.write(0x1003, 0xCC); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xCC);
     }
 
@@ -92,7 +92,7 @@ mod tests {
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x20);
         bus.write(0x2002, 0xDD); // 0x2000 + 0x02 = 0x2002
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xDD);
     }
 
@@ -101,7 +101,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_x(), 0x42);
     }
 
@@ -111,7 +111,7 @@ mod tests {
         bus.write(0x0050, 0x11);
         bus.write(0x0000, 0xA6); // LDX zero page
         bus.write(0x0001, 0x50);
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_x(), 0x11);
     }
 
@@ -123,7 +123,7 @@ mod tests {
         bus.write(0x0002, 0xB6); // LDX zero page, Y
         bus.write(0x0003, 0x10);
         bus.write(0x0014, 0x55); // 0x10 + 0x04 = 0x14
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x55);
     }
 
@@ -134,7 +134,7 @@ mod tests {
         bus.write(0x0000, 0xAE); // LDX absolute
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x30);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_x(), 0x99);
     }
 
@@ -147,7 +147,7 @@ mod tests {
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x40);
         bus.write(0x4001, 0x88); // 0x4000 + 0x01 = 0x4001
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x88);
     }
 
@@ -156,7 +156,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x33);
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_y(), 0x33);
     }
 
@@ -166,7 +166,7 @@ mod tests {
         bus.write(0x0020, 0x7F);
         bus.write(0x0000, 0xA4); // LDY zero page
         bus.write(0x0001, 0x20);
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_y(), 0x7F);
     }
 
@@ -178,7 +178,7 @@ mod tests {
         bus.write(0x0002, 0xB4); // LDY zero page, X
         bus.write(0x0003, 0x10);
         bus.write(0x0013, 0xAA); // 0x10 + 0x03 = 0x13
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0xAA);
     }
 
@@ -189,7 +189,7 @@ mod tests {
         bus.write(0x0000, 0xAC); // LDY absolute
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x50);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_y(), 0x66);
     }
 
@@ -202,7 +202,7 @@ mod tests {
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x60);
         bus.write(0x6002, 0x44); // 0x6000 + 0x02 = 0x6002
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x44);
     }
 
@@ -213,7 +213,7 @@ mod tests {
         bus.write(0x0001, 0x10);
         bus.write(0x0002, 0x69); // ADC immediate
         bus.write(0x0003, 0x05);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x15); // 0x10 + 0x05 = 0x15
     }
 
@@ -224,7 +224,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x69); // ADC immediate
         bus.write(0x0003, 0x01);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x00); // 0xFF + 0x01 wraps to 0x00
     }
 
@@ -236,7 +236,7 @@ mod tests {
         bus.write(0x0001, 0x10);
         bus.write(0x0002, 0x65); // ADC zero page
         bus.write(0x0003, 0x30);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x30); // 0x10 + 0x20
     }
 
@@ -250,7 +250,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x75); // ADC zero page, X
         bus.write(0x0005, 0x10);
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x0A); // 0x03 + 0x07
     }
 
@@ -263,7 +263,7 @@ mod tests {
         bus.write(0x0002, 0x6D); // ADC absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x33); // 0x22 + 0x11
     }
 
@@ -278,7 +278,7 @@ mod tests {
         bus.write(0x0004, 0x7D); // ADC absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10);
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x0A); // 0x09 + 0x01
     }
 
@@ -293,7 +293,7 @@ mod tests {
         bus.write(0x0004, 0x79); // ADC absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x20);
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x0A); // 0x02 + 0x08
     }
 
@@ -304,7 +304,7 @@ mod tests {
         bus.write(0x0001, 0x99);
         bus.write(0x0002, 0x29); // AND
         bus.write(0x0003, 0x88);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x88);
     }
 
@@ -316,7 +316,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x25); // AND zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x0F); // 0xFF & 0x0F
     }
 
@@ -330,7 +330,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x35); // AND zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x3C); // 0xFF & 0x3C
     }
 
@@ -343,7 +343,7 @@ mod tests {
         bus.write(0x0002, 0x2D); // AND absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF & 0xF0
     }
 
@@ -358,7 +358,7 @@ mod tests {
         bus.write(0x0004, 0x3D); // AND absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xAA); // 0xFF & 0xAA
     }
 
@@ -373,7 +373,7 @@ mod tests {
         bus.write(0x0004, 0x39); // AND absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x20); // 0x2000 + 0x02 = 0x2002
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x55); // 0xFF & 0x55
     }
 
@@ -389,7 +389,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x21); // AND indirect, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x0F); // 0xFF & 0x0F
     }
 
@@ -405,7 +405,7 @@ mod tests {
         bus.write(0x0003, 0x02);
         bus.write(0x0004, 0x31); // AND indirect, Y
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x3C); // 0xFF & 0x3C
     }
 
@@ -415,7 +415,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA
         bus.write(0x0001, 0x50);
         bus.write(0x0002, 0x0A); // ASL
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xA0); // 0x55 << 1
     }
 
@@ -425,7 +425,7 @@ mod tests {
         bus.write(0x0042, 0x04);
         bus.write(0x0000, 0x06); // ASL zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x08); // 0x04 << 1, written back to 0x42
     }
 
@@ -437,7 +437,7 @@ mod tests {
         bus.write(0x0001, 0x05);
         bus.write(0x0002, 0x16); // ASL zero page, X
         bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0015), 0x20); // 0x10 << 1, written back to 0x15
     }
 
@@ -448,7 +448,7 @@ mod tests {
         bus.write(0x0000, 0x0E); // ASL absolute
         bus.write(0x0001, 0x34);
         bus.write(0x0002, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 1);
         // ASL shifts memory in place, so read back from the address
         assert_eq!(bus.read(0x1234), 0x08); // 0x04 << 1
     }
@@ -462,7 +462,7 @@ mod tests {
         bus.write(0x0002, 0x1E); // ASL absolute, X
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1003), 0x20); // 0x10 << 1
     }
 
@@ -475,7 +475,7 @@ mod tests {
         bus.write(0x0002, 0x02);
         bus.write(0x0200, 0xA9); // LDA immediate at jump target
         bus.write(0x0201, 0x42);
-        cpu.execute(&mut bus, 5); // 3 ticks for JMP + 2 for LDA
+        cpu.step(&mut bus, 2); // 3 ticks for JMP + 2 for LDA
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -490,7 +490,7 @@ mod tests {
         bus.write(0x0002, 0x03);
         bus.write(0x0200, 0xA9); // LDA immediate at final target
         bus.write(0x0201, 0x55);
-        cpu.execute(&mut bus, 8); // 6 ticks for JMP indirect + 2 for LDA
+        cpu.step(&mut bus, 2); // 6 ticks for JMP indirect + 2 for LDA
         assert_eq!(cpu.read_acc(), 0x55);
     }
 
@@ -502,7 +502,7 @@ mod tests {
         bus.write(0x0001, 0x02); // offset +2 -> 0x0004
         bus.write(0x0004, 0xA9); // LDA immediate
         bus.write(0x0005, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -519,7 +519,7 @@ mod tests {
         bus.write(0x0007, 0x01);
         bus.write(0x0008, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0009, 0xFF);
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x01);
     }
 
@@ -534,7 +534,7 @@ mod tests {
         bus.write(0x0005, 0x02); // offset +2 -> 0x0008
         bus.write(0x0008, 0xA9); // LDA immediate (branch target)
         bus.write(0x0009, 0x42);
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -548,7 +548,7 @@ mod tests {
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0005, 0xFF);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x01);
     }
 
@@ -561,7 +561,7 @@ mod tests {
         bus.write(0x0003, 0x02); // offset +2 -> 0x0006
         bus.write(0x0006, 0xA9); // LDA immediate (branch target)
         bus.write(0x0007, 0x42);
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -576,7 +576,7 @@ mod tests {
         bus.write(0x0005, 0x02);
         bus.write(0x0006, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0007, 0xFF);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x02);
     }
 
@@ -589,7 +589,7 @@ mod tests {
         bus.write(0x0003, 0x02); // offset +2 -> 0x0006
         bus.write(0x0006, 0xA9); // LDA immediate (branch target)
         bus.write(0x0007, 0x42);
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -604,7 +604,7 @@ mod tests {
         bus.write(0x0005, 0x05);
         bus.write(0x0006, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0007, 0xFF);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x05);
     }
 
@@ -617,7 +617,7 @@ mod tests {
         bus.write(0x0003, 0x02); // offset +2 -> 0x0006
         bus.write(0x0006, 0xA9); // LDA immediate (branch target)
         bus.write(0x0007, 0x42);
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -632,7 +632,7 @@ mod tests {
         bus.write(0x0005, 0x03);
         bus.write(0x0006, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0007, 0xFF);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x03);
     }
 
@@ -645,7 +645,7 @@ mod tests {
         bus.write(0x0003, 0x02); // offset +2 -> 0x0006
         bus.write(0x0006, 0xA9); // LDA immediate (branch target)
         bus.write(0x0007, 0x42);
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -660,7 +660,7 @@ mod tests {
         bus.write(0x0005, 0x03);
         bus.write(0x0006, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0007, 0xFF);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x03);
     }
 
@@ -672,7 +672,7 @@ mod tests {
         bus.write(0x0001, 0x02); // offset +2 -> 0x0004
         bus.write(0x0004, 0xA9); // LDA immediate (branch target)
         bus.write(0x0005, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -690,7 +690,7 @@ mod tests {
         bus.write(0x0007, 0x01);
         bus.write(0x0008, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0009, 0xFF);
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x01);
     }
 
@@ -706,7 +706,7 @@ mod tests {
         bus.write(0x0005, 0x02); // offset +2 -> 0x0008
         bus.write(0x0008, 0xA9); // LDA immediate (branch target)
         bus.write(0x0009, 0x42);
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -720,7 +720,7 @@ mod tests {
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0xA9); // LDA immediate (branch target, should not run)
         bus.write(0x0005, 0xFF);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x01);
     }
 
@@ -730,7 +730,7 @@ mod tests {
         bus.write(0x0000, 0xEA); // NOP
         bus.write(0x0001, 0xA9); // LDA immediate
         bus.write(0x0002, 0x01);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x01);
     }
 
@@ -742,7 +742,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x24); // BIT zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // accumulator unchanged
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -755,7 +755,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x24); // BIT zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // accumulator unchanged
         assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
     }
@@ -768,7 +768,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x24); // BIT zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
@@ -780,7 +780,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x24); // BIT zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b01000000, 0b01000000); // V set
     }
 
@@ -792,7 +792,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x24); // BIT zero page
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b11000000, 0); // V and N clear
     }
 
@@ -805,7 +805,7 @@ mod tests {
         bus.write(0x0002, 0x2C); // BIT absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // accumulator unchanged
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -819,7 +819,7 @@ mod tests {
         bus.write(0x0002, 0x2C); // BIT absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b11000000, 0b11000000); // V and N set
     }
 
@@ -833,7 +833,7 @@ mod tests {
         // Place an LDA at the IRQ handler address
         bus.write(0x0200, 0xA9);
         bus.write(0x0201, 0x42);
-        cpu.execute(&mut bus, 9); // 7 ticks for BRK + 2 for LDA
+        cpu.step(&mut bus, 2); // 7 ticks for BRK + 2 for LDA
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -844,7 +844,7 @@ mod tests {
         bus.write(0xFFFF, 0x02);
         bus.write(0x0000, 0x00); // BRK at 0x0000, so PC+2 = 0x0002
         bus.write(0x0200, 0xEA); // NOP at handler so execute completes
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         // Stack grows down from 0x01FF, SP starts at 0xFD
         // BRK pushes hi(PC+2) to 0x01FD, lo(PC+2) to 0x01FC, status to 0x01FB
         assert_eq!(bus.read(0x01FD), 0x00); // hi byte of 0x0002
@@ -858,7 +858,7 @@ mod tests {
         bus.write(0xFFFF, 0x02);
         bus.write(0x0000, 0x00); // BRK
         bus.write(0x0200, 0xEA); // NOP at handler
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         // Status pushed to 0x01FB with B flag (bit 4) set
         let pushed_status = bus.read(0x01FB);
         assert_eq!(pushed_status & 0b00010000, 0b00010000); // B flag set
@@ -873,7 +873,7 @@ mod tests {
         bus.write(0x0002, 0x69); // ADC immediate - sets carry
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0x18); // CLC
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear
     }
 
@@ -883,7 +883,7 @@ mod tests {
         // Set decimal flag first with SED (0xF8)
         bus.write(0x0000, 0xF8); // SED
         bus.write(0x0001, 0xD8); // CLD
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00001000, 0); // D clear
     }
 
@@ -893,7 +893,7 @@ mod tests {
         // Set interrupt disable first with SEI (0x78)
         bus.write(0x0000, 0x78); // SEI
         bus.write(0x0001, 0x58); // CLI
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000100, 0); // I clear
     }
 
@@ -906,7 +906,7 @@ mod tests {
         bus.write(0x0002, 0x69); // ADC immediate - sets overflow
         bus.write(0x0003, 0x50);
         bus.write(0x0004, 0xB8); // CLV
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b01000000, 0); // V clear
     }
 
@@ -917,11 +917,11 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xE0); // CPX immediate
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (X >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
-        assert_eq!(cpu.read_x(), 0x42);                          // X unchanged
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
+        assert_eq!(cpu.read_x(), 0x42); // X unchanged
     }
 
     #[test]
@@ -931,10 +931,10 @@ mod tests {
         bus.write(0x0001, 0x50);
         bus.write(0x0002, 0xE0); // CPX immediate
         bus.write(0x0003, 0x30);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (X >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
     }
 
     #[test]
@@ -944,9 +944,9 @@ mod tests {
         bus.write(0x0001, 0x10);
         bus.write(0x0002, 0xE0); // CPX immediate
         bus.write(0x0003, 0x20);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
-        assert_eq!(cpu.read_status() & 0b00000001, 0);           // C clear (X < M)
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
+        assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (X < M)
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
@@ -958,7 +958,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xE4); // CPX zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -972,7 +972,7 @@ mod tests {
         bus.write(0x0002, 0xEC); // CPX absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -984,11 +984,11 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xC0); // CPY immediate
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (Y >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
-        assert_eq!(cpu.read_y(), 0x42);                          // Y unchanged
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
+        assert_eq!(cpu.read_y(), 0x42); // Y unchanged
     }
 
     #[test]
@@ -998,10 +998,10 @@ mod tests {
         bus.write(0x0001, 0x50);
         bus.write(0x0002, 0xC0); // CPY immediate
         bus.write(0x0003, 0x30);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (Y >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
     }
 
     #[test]
@@ -1011,9 +1011,9 @@ mod tests {
         bus.write(0x0001, 0x10);
         bus.write(0x0002, 0xC0); // CPY immediate
         bus.write(0x0003, 0x20);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
-        assert_eq!(cpu.read_status() & 0b00000001, 0);           // C clear (Y < M)
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
+        assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (Y < M)
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
@@ -1025,7 +1025,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xC4); // CPY zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1039,7 +1039,7 @@ mod tests {
         bus.write(0x0002, 0xCC); // CPY absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1051,11 +1051,11 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xC9); // CMP immediate
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (A >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
-        assert_eq!(cpu.read_acc(), 0x42);                        // A unchanged
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
+        assert_eq!(cpu.read_acc(), 0x42); // A unchanged
     }
 
     #[test]
@@ -1065,10 +1065,10 @@ mod tests {
         bus.write(0x0001, 0x50);
         bus.write(0x0002, 0xC9); // CMP immediate
         bus.write(0x0003, 0x30);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (A >= M)
-        assert_eq!(cpu.read_status() & 0b10000000, 0);           // N clear
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N clear
     }
 
     #[test]
@@ -1078,9 +1078,9 @@ mod tests {
         bus.write(0x0001, 0x10);
         bus.write(0x0002, 0xC9); // CMP immediate
         bus.write(0x0003, 0x20);
-        cpu.execute(&mut bus, 4);
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z clear
-        assert_eq!(cpu.read_status() & 0b00000001, 0);           // C clear (A < M)
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z clear
+        assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (A < M)
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
@@ -1092,7 +1092,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xC5); // CMP zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1107,7 +1107,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0xD5); // CMP zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1121,7 +1121,7 @@ mod tests {
         bus.write(0x0002, 0xCD); // CMP absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1137,7 +1137,7 @@ mod tests {
         bus.write(0x0004, 0xDD); // CMP absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1153,7 +1153,7 @@ mod tests {
         bus.write(0x0004, 0xD9); // CMP absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1170,7 +1170,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0xC1); // CMP indirect, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1187,7 +1187,7 @@ mod tests {
         bus.write(0x0003, 0x02);
         bus.write(0x0004, 0xD1); // CMP indirect, Y
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set (equal)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
@@ -1198,10 +1198,10 @@ mod tests {
         bus.write(0x0000, 0xC6);
         bus.write(0x0001, 0x55);
         bus.write(0x0055, 0x01);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0055), 0x00);
     }
-    
+
     #[test]
     fn dec_zp_x() {
         let (mut cpu, mut bus) = init();
@@ -1210,7 +1210,7 @@ mod tests {
         bus.write(0x0002, 0xD6);
         bus.write(0x0003, 0x50);
         bus.write(0x0055, 0x01);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0055), 0x00);
     }
 
@@ -1221,7 +1221,7 @@ mod tests {
         bus.write(0x0001, 0x55);
         bus.write(0x0002, 0x00);
         bus.write(0x0055, 0x01);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0055), 0x00);
     }
 
@@ -1234,7 +1234,7 @@ mod tests {
         bus.write(0x0003, 0x50);
         bus.write(0x0004, 0x00);
         bus.write(0x0055, 0x01);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0055), 0x00);
     }
 
@@ -1244,7 +1244,7 @@ mod tests {
         bus.write(0x0000, 0xA2);
         bus.write(0x0001, 0x02);
         bus.write(0x0002, 0xCA);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x01);
     }
 
@@ -1254,7 +1254,7 @@ mod tests {
         bus.write(0x0000, 0xA0);
         bus.write(0x0001, 0x02);
         bus.write(0x0002, 0x88);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x01);
     }
 
@@ -1265,7 +1265,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x49); // EOR immediate
         bus.write(0x0003, 0x0F);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1276,7 +1276,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x49); // EOR immediate - same value sets Z
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -1288,7 +1288,7 @@ mod tests {
         bus.write(0x0001, 0x0F);
         bus.write(0x0002, 0x49); // EOR immediate - result has bit 7 set
         bus.write(0x0003, 0xF0);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // 0x0F ^ 0xF0
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1301,7 +1301,7 @@ mod tests {
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0x45); // EOR zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1315,7 +1315,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x55); // EOR zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1328,7 +1328,7 @@ mod tests {
         bus.write(0x0002, 0x4D); // EOR absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1343,7 +1343,7 @@ mod tests {
         bus.write(0x0004, 0x5D); // EOR absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1358,7 +1358,7 @@ mod tests {
         bus.write(0x0004, 0x59); // EOR absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1374,7 +1374,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x41); // EOR indirect, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
 
@@ -1390,7 +1390,7 @@ mod tests {
         bus.write(0x0003, 0x02);
         bus.write(0x0004, 0x51); // EOR indirect, Y
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF0); // 0xFF ^ 0x0F
     }
     #[test]
@@ -1399,7 +1399,7 @@ mod tests {
         bus.write(0x0042, 0x09);
         bus.write(0x0000, 0xE6); // INC zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x0A); // 0x09 + 1
     }
 
@@ -1409,7 +1409,7 @@ mod tests {
         bus.write(0x0042, 0xFF);
         bus.write(0x0000, 0xE6); // INC zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x00); // 0xFF wraps to 0x00
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -1420,7 +1420,7 @@ mod tests {
         bus.write(0x0042, 0x7F);
         bus.write(0x0000, 0xE6); // INC zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x80); // 0x7F + 1 = 0x80, bit 7 set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1433,7 +1433,7 @@ mod tests {
         bus.write(0x0001, 0x05);
         bus.write(0x0002, 0xF6); // INC zero page, X
         bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0015), 0x0A); // 0x09 + 1
     }
 
@@ -1444,7 +1444,7 @@ mod tests {
         bus.write(0x0000, 0xEE); // INC absolute
         bus.write(0x0001, 0x34);
         bus.write(0x0002, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x1234), 0x0A); // 0x09 + 1
     }
 
@@ -1457,7 +1457,7 @@ mod tests {
         bus.write(0x0002, 0xFE); // INC absolute, X
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1003), 0x0A); // 0x09 + 1
     }
 
@@ -1467,7 +1467,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x09);
         bus.write(0x0002, 0xE8); // INX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x0A); // 0x09 + 1
     }
 
@@ -1477,7 +1477,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0xE8); // INX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x00); // 0xFF wraps to 0x00
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -1488,7 +1488,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x7F);
         bus.write(0x0002, 0xE8); // INX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x80); // 0x7F + 1 = 0x80, bit 7 set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1499,7 +1499,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x09);
         bus.write(0x0002, 0xC8); // INY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x0A); // 0x09 + 1
     }
 
@@ -1509,7 +1509,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0xFF);
         bus.write(0x0002, 0xC8); // INY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x00); // 0xFF wraps to 0x00
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -1520,7 +1520,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x7F);
         bus.write(0x0002, 0xC8); // INY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x80); // 0x7F + 1 = 0x80, bit 7 set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1533,7 +1533,7 @@ mod tests {
         bus.write(0x0002, 0x02); // target = 0x0200
         bus.write(0x0200, 0xA9); // LDA immediate at subroutine
         bus.write(0x0201, 0x42);
-        cpu.execute(&mut bus, 8); // 6 ticks for JSR + 2 for LDA
+        cpu.step(&mut bus, 2); // 6 ticks for JSR + 2 for LDA
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -1544,7 +1544,7 @@ mod tests {
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x02); // target = 0x0200
         bus.write(0x0200, 0xEA); // NOP at subroutine
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 2);
         // JSR pushes PC-1 = 0x0002 (last byte of JSR instruction)
         // hi byte pushed to 0x01FD (SP starts at 0xFD)
         assert_eq!(bus.read(0x01FD), 0x00); // hi byte of 0x0002
@@ -1557,7 +1557,7 @@ mod tests {
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x02); // target = 0x0200
         bus.write(0x0200, 0xEA); // NOP at subroutine
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 2);
         // lo byte pushed to 0x01FC
         assert_eq!(bus.read(0x01FC), 0x02); // lo byte of 0x0002
     }
@@ -1569,7 +1569,7 @@ mod tests {
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x02);
         bus.write(0x0200, 0xEA); // NOP at subroutine
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 2);
         // SP starts at 0xFD, two pushes -> 0xFB
         assert_eq!(cpu.read_sp(), 0xFB);
     }
@@ -1588,7 +1588,7 @@ mod tests {
         // LDA at final subroutine
         bus.write(0x0300, 0xA9);
         bus.write(0x0301, 0x42);
-        cpu.execute(&mut bus, 14); // 6 + 6 + 2
+        cpu.step(&mut bus, 3); // 6 + 6 + 2
         assert_eq!(cpu.read_acc(), 0x42);
         // SP should be decremented by 4 total (two JSRs)
         assert_eq!(cpu.read_sp(), 0xF9);
@@ -1601,7 +1601,7 @@ mod tests {
         bus.write(0x0001, 0xF0);
         bus.write(0x0002, 0x09); // ORA immediate
         bus.write(0x0003, 0x0F);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1612,7 +1612,7 @@ mod tests {
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x09); // ORA immediate
         bus.write(0x0003, 0x00);
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -1624,7 +1624,7 @@ mod tests {
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x09); // ORA immediate
         bus.write(0x0003, 0x80); // bit 7 set -> N set
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1637,7 +1637,7 @@ mod tests {
         bus.write(0x0001, 0xF0);
         bus.write(0x0002, 0x05); // ORA zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1651,7 +1651,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x15); // ORA zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1664,7 +1664,7 @@ mod tests {
         bus.write(0x0002, 0x0D); // ORA absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1679,7 +1679,7 @@ mod tests {
         bus.write(0x0004, 0x1D); // ORA absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1694,7 +1694,7 @@ mod tests {
         bus.write(0x0004, 0x19); // ORA absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1710,7 +1710,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x01); // ORA indirect, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1726,7 +1726,7 @@ mod tests {
         bus.write(0x0003, 0x02);
         bus.write(0x0004, 0x11); // ORA indirect, Y
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xFF); // 0xF0 | 0x0F
     }
 
@@ -1736,7 +1736,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x48); // PHA
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x01FD), 0x42); // written to 0x01FD (SP starts at 0xFD)
     }
 
@@ -1746,7 +1746,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x48); // PHA
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_sp(), 0xFC); // SP starts at 0xFD, one push -> 0xFC
     }
 
@@ -1756,7 +1756,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x48); // PHA
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42); // A unchanged
     }
 
@@ -1772,18 +1772,18 @@ mod tests {
         bus.write(0x0006, 0xA9); // LDA immediate
         bus.write(0x0007, 0x33);
         bus.write(0x0008, 0x48); // PHA
-        cpu.execute(&mut bus, 15);
+        cpu.step(&mut bus, 6);
         assert_eq!(bus.read(0x01FD), 0x11); // first push
         assert_eq!(bus.read(0x01FC), 0x22); // second push
         assert_eq!(bus.read(0x01FB), 0x33); // third push
-        assert_eq!(cpu.read_sp(), 0xFA);    // SP decremented 3 times
+        assert_eq!(cpu.read_sp(), 0xFA); // SP decremented 3 times
     }
 
     #[test]
     fn php_pushes_status_to_stack() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x08); // PHP
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 1);
         // SP starts at 0xFD, one push -> written to 0x01FD
         let pushed = bus.read(0x01FD);
 
@@ -1795,7 +1795,7 @@ mod tests {
     fn php_decrements_sp() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x08); // PHP
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_sp(), 0xFC); // SP starts at 0xFD, one push -> 0xFC
     }
 
@@ -1808,7 +1808,7 @@ mod tests {
         bus.write(0x0002, 0x69); // ADC immediate - sets carry
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0x08); // PHP
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         let pushed = bus.read(0x01FD);
         assert_eq!(pushed & 0b00000001, 0b00000001); // C set in pushed status
     }
@@ -1819,7 +1819,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0x08); // PHP
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         let pushed = bus.read(0x01FD);
         assert_eq!(pushed & 0b10000000, 0b10000000); // N set in pushed status
     }
@@ -1830,11 +1830,11 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x08); // PHP
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 3);
         // Status register itself should be unchanged after PHP
         let status_before = cpu.read_status();
         bus.write(0x0003, 0x08); // PHP again
-        cpu.execute(&mut bus, 3);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status(), status_before);
     }
 
@@ -1844,7 +1844,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x04);
         bus.write(0x0002, 0x2A); // ROL accumulator
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x08); // 0x04 << 1, carry was 0
     }
 
@@ -1859,7 +1859,7 @@ mod tests {
         bus.write(0x0004, 0xA9); // LDA immediate
         bus.write(0x0005, 0x04);
         bus.write(0x0006, 0x2A); // ROL accumulator - carry rotates into bit 0
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x09); // 0x04 << 1 | carry(1) = 0x09
     }
 
@@ -1869,7 +1869,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x80); // bit 7 set -> will shift into carry
         bus.write(0x0002, 0x2A); // ROL accumulator
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x00); // 0x80 << 1 = 0x00 (bit 7 shifted out)
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
@@ -1881,7 +1881,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x40); // 0x40 << 1 = 0x80, sets N
         bus.write(0x0002, 0x2A); // ROL accumulator
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1892,7 +1892,7 @@ mod tests {
         bus.write(0x0042, 0x04);
         bus.write(0x0000, 0x26); // ROL zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x08); // 0x04 << 1
     }
 
@@ -1907,7 +1907,7 @@ mod tests {
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0x26); // ROL zero page
         bus.write(0x0005, 0x42);
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x0042), 0x09); // 0x04 << 1 | carry(1) = 0x09
     }
 
@@ -1919,7 +1919,7 @@ mod tests {
         bus.write(0x0001, 0x05);
         bus.write(0x0002, 0x36); // ROL zero page, X
         bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0015), 0x08); // 0x04 << 1
     }
 
@@ -1930,7 +1930,7 @@ mod tests {
         bus.write(0x0000, 0x2E); // ROL absolute
         bus.write(0x0001, 0x34);
         bus.write(0x0002, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x1234), 0x08); // 0x04 << 1
     }
 
@@ -1943,7 +1943,7 @@ mod tests {
         bus.write(0x0002, 0x3E); // ROL absolute, X
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1003), 0x08); // 0x04 << 1
     }
 
@@ -1953,7 +1953,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x08);
         bus.write(0x0002, 0x6A); // ROR accumulator
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x04); // 0x08 >> 1, carry was 0
     }
 
@@ -1968,7 +1968,7 @@ mod tests {
         bus.write(0x0004, 0xA9); // LDA immediate - 2
         bus.write(0x0005, 0x08);
         bus.write(0x0006, 0x6A); // ROR accumulator - carry rotates into bit 7 - 2
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x84); // 0x08 >> 1 | carry(1) << 7 = 0x84
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -1979,7 +1979,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x01); // bit 0 set -> will shift into carry
         bus.write(0x0002, 0x6A); // ROR accumulator
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x00); // 0x01 >> 1 = 0x00
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
@@ -1996,7 +1996,7 @@ mod tests {
         bus.write(0x0004, 0xA9); // LDA immediate
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x6A); // ROR accumulator - carry into bit 7 sets N
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -2007,7 +2007,7 @@ mod tests {
         bus.write(0x0042, 0x08);
         bus.write(0x0000, 0x66); // ROR zero page
         bus.write(0x0001, 0x42);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x0042), 0x04); // 0x08 >> 1
     }
 
@@ -2022,7 +2022,7 @@ mod tests {
         bus.write(0x0003, 0x01);
         bus.write(0x0004, 0x66); // ROR zero page
         bus.write(0x0005, 0x42);
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x0042), 0x84); // 0x08 >> 1 | carry(1) << 7 = 0x84
     }
 
@@ -2034,7 +2034,7 @@ mod tests {
         bus.write(0x0001, 0x05);
         bus.write(0x0002, 0x76); // ROR zero page, X
         bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0015), 0x04); // 0x08 >> 1
     }
 
@@ -2045,7 +2045,7 @@ mod tests {
         bus.write(0x0000, 0x6E); // ROR absolute
         bus.write(0x0001, 0x34);
         bus.write(0x0002, 0x12);
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 1);
         assert_eq!(bus.read(0x1234), 0x04); // 0x08 >> 1
     }
 
@@ -2058,7 +2058,7 @@ mod tests {
         bus.write(0x0002, 0x7E); // ROR absolute, X
         bus.write(0x0003, 0x00);
         bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1003), 0x04); // 0x08 >> 1
     }
 
@@ -2073,7 +2073,7 @@ mod tests {
         // RTI should pull them back and resume at 0x0002
         bus.write(0x0002, 0xA9); // LDA immediate at return address (2 ticks)
         bus.write(0x0003, 0x42);
-        cpu.execute(&mut bus, 15); // 7 BRK + 6 RTI + 2 LDA = 15
+        cpu.step(&mut bus, 3); // 7 BRK + 6 RTI + 2 LDA = 15
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -2090,7 +2090,7 @@ mod tests {
         bus.write(0x0004, 0x00); // BRK (7 ticks)
         bus.write(0x0200, 0x40); // RTI at handler (6 ticks)
         bus.write(0x0006, 0xEA); // NOP at return address (2 ticks)
-        cpu.execute(&mut bus, 19); // 2 + 2 + 7 + 6 + 2 = 19
+        cpu.step(&mut bus, 5); // 2 + 2 + 7 + 6 + 2 = 19
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C restored
     }
 
@@ -2102,7 +2102,7 @@ mod tests {
         bus.write(0x0000, 0x00); // BRK (7 ticks) - pushes 3 bytes, SP 0xFD -> 0xFA
         bus.write(0x0200, 0x40); // RTI (6 ticks) - pulls 3 bytes, SP 0xFA -> 0xFD
         bus.write(0x0002, 0xEA); // NOP at return address (2 ticks)
-        cpu.execute(&mut bus, 15); // 7 BRK + 6 RTI = 13, +2 NOP = 15
+        cpu.step(&mut bus, 3); // 7 BRK + 6 RTI = 13, +2 NOP = 15
         assert_eq!(cpu.read_sp(), 0xFD); // SP fully restored
     }
 
@@ -2114,7 +2114,7 @@ mod tests {
         bus.write(0x0000, 0x00); // BRK (7 ticks)
         bus.write(0x0200, 0x40); // RTI (6 ticks)
         bus.write(0x0002, 0xEA); // NOP at return address (2 ticks)
-        cpu.execute(&mut bus, 15);
+        cpu.step(&mut bus, 3);
         // B flag (bit 4) should not be set in the live status register after RTI
         assert_eq!(cpu.read_status() & 0b00010000, 0); // B clear after RTI
     }
@@ -2128,7 +2128,7 @@ mod tests {
         bus.write(0x0200, 0x60); // RTS (6 ticks)
         bus.write(0x0003, 0xA9); // LDA immediate at return address (2 ticks)
         bus.write(0x0004, 0x42);
-        cpu.execute(&mut bus, 14); // 6 JSR + 6 RTS + 2 LDA
+        cpu.step(&mut bus, 3); // 6 JSR + 6 RTS + 2 LDA
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -2142,7 +2142,7 @@ mod tests {
         bus.write(0x0200, 0x60); // RTS (6 ticks) - SP increments by 2
         bus.write(0x0003, 0xEA); // NOP at return address (2 ticks)
 
-        cpu.execute(&mut bus, 14);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_sp(), sp_before); // SP back to original value
     }
 
@@ -2164,7 +2164,7 @@ mod tests {
         // LDA at return address
         bus.write(0x0003, 0xA9); // LDA immediate (2 ticks)
         bus.write(0x0004, 0x42);
-        cpu.execute(&mut bus, 26); // 6 + 6 + 6 + 6 + 2
+        cpu.step(&mut bus, 7); // 6 + 6 + 6 + 6 + 2
         assert_eq!(cpu.read_acc(), 0x42);
     }
 
@@ -2180,7 +2180,7 @@ mod tests {
         bus.write(0x0004, 0x01);
         bus.write(0x0005, 0xA9); // LDA immediate - wrong landing address
         bus.write(0x0006, 0xFF);
-        cpu.execute(&mut bus, 14);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x01); // landed on 0x0003 not 0x0002 or 0x0005
     }
 
@@ -2188,7 +2188,7 @@ mod tests {
     fn sec_sets_carry() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x38); // SEC
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
     }
 
@@ -2198,7 +2198,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0x38); // SEC
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
     }
@@ -2209,7 +2209,7 @@ mod tests {
         // Setting carry twice should leave it set
         bus.write(0x0000, 0x38); // SEC
         bus.write(0x0001, 0x38); // SEC again
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C still set
     }
 
@@ -2221,11 +2221,11 @@ mod tests {
         bus.write(0x0002, 0x10);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x05);
-        cpu.execute(&mut bus, 7); // 2 SEC + 2 LDA + 2 SBC + 1 fetch
+        cpu.step(&mut bus, 3); // 2 SEC + 2 LDA + 2 SBC + 1 fetch
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
-        #[test]
+    #[test]
     fn sbc_immediate_carry_clear_after_borrow() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x38); // SEC
@@ -2233,7 +2233,7 @@ mod tests {
         bus.write(0x0002, 0x05);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x10); // A < M -> borrow -> carry clear
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0xF5); // 0x05 - 0x10 wraps
         assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (borrow)
     }
@@ -2246,7 +2246,7 @@ mod tests {
         bus.write(0x0002, 0x10);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x05); // A >= M -> no borrow -> carry set
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set (no borrow)
     }
 
@@ -2258,7 +2258,7 @@ mod tests {
         bus.write(0x0002, 0x42);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x42); // A == M -> result 0 -> Z set
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -2273,7 +2273,7 @@ mod tests {
         bus.write(0x0002, 0xD0);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x70);
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_status() & 0b01000000, 0b01000000); // V set
     }
 
@@ -2285,7 +2285,7 @@ mod tests {
         bus.write(0x0002, 0x05);
         bus.write(0x0003, 0xE9); // SBC immediate
         bus.write(0x0004, 0x10); // result has bit 7 set
-        cpu.execute(&mut bus, 7);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
 
@@ -2298,7 +2298,7 @@ mod tests {
         bus.write(0x0002, 0x10);
         bus.write(0x0003, 0xE5); // SBC zero page
         bus.write(0x0004, 0x50);
-        cpu.execute(&mut bus, 8); // 2 + 2 + 3 + fetch
+        cpu.step(&mut bus, 3); // 2 + 2 + 3 + fetch
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2313,7 +2313,7 @@ mod tests {
         bus.write(0x0004, 0x05);
         bus.write(0x0005, 0xF5); // SBC zero page, X
         bus.write(0x0006, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 11);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2327,7 +2327,7 @@ mod tests {
         bus.write(0x0003, 0xED); // SBC absolute
         bus.write(0x0004, 0x34);
         bus.write(0x0005, 0x12);
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2343,7 +2343,7 @@ mod tests {
         bus.write(0x0005, 0xFD); // SBC absolute, X
         bus.write(0x0006, 0x00);
         bus.write(0x0007, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 13);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2359,7 +2359,7 @@ mod tests {
         bus.write(0x0005, 0xF9); // SBC absolute, Y
         bus.write(0x0006, 0x00);
         bus.write(0x0007, 0x10); // 0x1000 + 0x02 = 0x1002
-        cpu.execute(&mut bus, 13);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2376,7 +2376,7 @@ mod tests {
         bus.write(0x0004, 0x05);
         bus.write(0x0005, 0xE1); // SBC indirect, X
         bus.write(0x0006, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 15);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
     }
 
@@ -2393,15 +2393,15 @@ mod tests {
         bus.write(0x0004, 0x02);
         bus.write(0x0005, 0xF1); // SBC indirect, Y
         bus.write(0x0006, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 14);
+        cpu.step(&mut bus, 4);
         assert_eq!(cpu.read_acc(), 0x0B); // 0x10 - 0x05
-    } 
+    }
 
     #[test]
     fn sed_sets_decimal() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xF8); // SED
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D set
     }
 
@@ -2411,7 +2411,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0xF8); // SED
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
     }
@@ -2421,7 +2421,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xF8); // SED
         bus.write(0x0001, 0xF8); // SED again
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00001000, 0b00001000); // D still set
     }
 
@@ -2429,7 +2429,7 @@ mod tests {
     fn sei_sets_interrupt_disable() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x78); // SEI
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I set
     }
 
@@ -2439,7 +2439,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0x78); // SEI
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I set
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
     }
@@ -2449,7 +2449,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0x78); // SEI
         bus.write(0x0001, 0x78); // SEI again
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_status() & 0b00000100, 0b00000100); // I still set
     }
 
@@ -2460,7 +2460,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x85); // STA zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0050), 0x42);
         assert_eq!(cpu.read_acc(), 0x42); // A unchanged
     }
@@ -2474,7 +2474,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x95); // STA zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x0015), 0x42);
     }
 
@@ -2486,7 +2486,7 @@ mod tests {
         bus.write(0x0002, 0x8D); // STA absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12); // target = 0x1234
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1234), 0x42);
     }
 
@@ -2500,7 +2500,7 @@ mod tests {
         bus.write(0x0004, 0x9D); // STA absolute, X
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x03 = 0x1003
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x1003), 0x42);
     }
 
@@ -2514,7 +2514,7 @@ mod tests {
         bus.write(0x0004, 0x99); // STA absolute, Y
         bus.write(0x0005, 0x00);
         bus.write(0x0006, 0x10); // 0x1000 + 0x02 = 0x1002
-        cpu.execute(&mut bus, 9);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x1002), 0x42);
     }
 
@@ -2529,7 +2529,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x81); // STA indirect, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x3000), 0x42);
     }
 
@@ -2544,10 +2544,9 @@ mod tests {
         bus.write(0x0003, 0x02);
         bus.write(0x0004, 0x91); // STA indirect, Y
         bus.write(0x0005, 0x20); // base = 0x3000, + Y(0x02) = 0x3002
-        cpu.execute(&mut bus, 10);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x3002), 0x42);
     }
-
 
     #[test]
     fn stx_zero_page() {
@@ -2556,7 +2555,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x86); // STX zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0050), 0x42);
         assert_eq!(cpu.read_x(), 0x42); // X unchanged
     }
@@ -2570,7 +2569,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x96); // STX zero page, Y
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x0015), 0x42);
     }
 
@@ -2582,7 +2581,7 @@ mod tests {
         bus.write(0x0002, 0x8E); // STX absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12); // target = 0x1234
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1234), 0x42);
     }
 
@@ -2593,7 +2592,7 @@ mod tests {
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x84); // STY zero page
         bus.write(0x0003, 0x50);
-        cpu.execute(&mut bus, 5);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x0050), 0x42);
         assert_eq!(cpu.read_y(), 0x42); // Y unchanged
     }
@@ -2607,7 +2606,7 @@ mod tests {
         bus.write(0x0003, 0x05);
         bus.write(0x0004, 0x94); // STY zero page, X
         bus.write(0x0005, 0x10); // 0x10 + 0x05 = 0x15
-        cpu.execute(&mut bus, 8);
+        cpu.step(&mut bus, 3);
         assert_eq!(bus.read(0x0015), 0x42);
     }
 
@@ -2619,7 +2618,7 @@ mod tests {
         bus.write(0x0002, 0x8C); // STY absolute
         bus.write(0x0003, 0x34);
         bus.write(0x0004, 0x12); // target = 0x1234
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 2);
         assert_eq!(bus.read(0x1234), 0x42);
     }
 
@@ -2629,7 +2628,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xAA); // TAX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x42);
         assert_eq!(cpu.read_acc(), 0x42); // A unchanged
     }
@@ -2640,7 +2639,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0xAA); // TAX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -2651,7 +2650,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0xAA); // TAX
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_x(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -2662,7 +2661,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0xA8); // TAY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x42);
         assert_eq!(cpu.read_acc(), 0x42); // A unchanged
     }
@@ -2673,7 +2672,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0xA8); // TAY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -2684,7 +2683,7 @@ mod tests {
         bus.write(0x0000, 0xA9); // LDA immediate
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0xA8); // TAY
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_y(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -2695,7 +2694,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x8A); // TXA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42);
         assert_eq!(cpu.read_x(), 0x42); // X unchanged
     }
@@ -2706,7 +2705,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x8A); // TXA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -2717,7 +2716,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0x8A); // TXA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -2728,7 +2727,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x98); // TYA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42);
         assert_eq!(cpu.read_y(), 0x42); // Y unchanged
     }
@@ -2739,7 +2738,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x00);
         bus.write(0x0002, 0x98); // TYA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x00);
         assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
     }
@@ -2750,7 +2749,7 @@ mod tests {
         bus.write(0x0000, 0xA0); // LDY immediate
         bus.write(0x0001, 0x80);
         bus.write(0x0002, 0x98); // TYA
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x80);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
     }
@@ -2759,7 +2758,7 @@ mod tests {
     fn tsx_transfers_sp_to_x() {
         let (mut cpu, mut bus) = init();
         bus.write(0x0000, 0xBA); // TSX
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_x(), cpu.read_sp());
     }
 
@@ -2768,7 +2767,7 @@ mod tests {
         let (mut cpu, mut bus) = init();
         // SP is 0xFD after reset, bit 7 set -> N set
         bus.write(0x0000, 0xBA); // TSX
-        cpu.execute(&mut bus, 2);
+        cpu.step(&mut bus, 1);
         assert_eq!(cpu.read_x(), 0xFD);
         assert_eq!(cpu.read_sp(), 0xFD); // SP unchanged
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N set
@@ -2780,7 +2779,7 @@ mod tests {
         bus.write(0x0000, 0xA2); // LDX immediate
         bus.write(0x0001, 0x42);
         bus.write(0x0002, 0x9A); // TXS
-        cpu.execute(&mut bus, 4);
+        cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_sp(), 0x42);
         assert_eq!(cpu.read_x(), 0x42); // X unchanged
     }
@@ -2794,9 +2793,9 @@ mod tests {
         bus.write(0x0002, 0xA9); // LDA immediate - set N flag (2 ticks)
         bus.write(0x0003, 0x80);
         bus.write(0x0004, 0x9A); // TXS (2 ticks) - should not clear N or set Z
-        cpu.execute(&mut bus, 6);
+        cpu.step(&mut bus, 3);
         assert_eq!(cpu.read_sp(), 0x00);
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
-        assert_eq!(cpu.read_status() & 0b00000010, 0);           // Z not set
+        assert_eq!(cpu.read_status() & 0b00000010, 0); // Z not set
     }
 }

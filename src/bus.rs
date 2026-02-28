@@ -1,4 +1,4 @@
-use std::{ops::RangeInclusive};
+use std::ops::RangeInclusive;
 
 pub trait Device {
     fn read(&self, addr: u16) -> u8;
@@ -10,13 +10,11 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn default() -> Self{
-        Self {
-            devices: vec![]
-        }
+    pub fn default() -> Self {
+        Self { devices: vec![] }
     }
 
-    pub fn register(&mut self, range: RangeInclusive<u16>, device: Box<dyn Device>){
+    pub fn register(&mut self, range: RangeInclusive<u16>, device: Box<dyn Device>) {
         self.devices.push((range, device));
     }
 
