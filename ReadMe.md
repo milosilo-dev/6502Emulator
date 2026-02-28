@@ -71,17 +71,17 @@ It should also be noted that the test framework and thus the first few tests bui
 
 The reason the tests are so thorough (3000 lines!) is because regressions are a big problem in CPU Emulators with so many instructions to think about, these are to hopefully avoid regresions in the future.
 
+### Test roms
+I am currently working towards running test roms to assess my CPU's accuracy, Credit to [Klaus2m5](https://github.com/Klaus2m5/6502_65C02_functional_tests) for the test roms.
+
 ---
 
 ## Known Issues & Limitations
 
-- The original 6502 page-boundary indirect JMP bug is not currently emulated:  
-  > The real 6502 incorrectly fetches the high byte of the target address if the indirect vector falls on a page boundary.
 - Not every physical pin of the real 6502 is exposed as a public function on the CPU struct.
-- The current `execute()` function will likely be replaced with a `step()` function that:
-  - Executes exactly one instruction at the current PC
-  - Returns the number of clock cycles used
-- The CPU implementation currently lives in a single file and could benefit from refactoring.
+- Not cycle accurate, there are fixed numbers of ticks per instruction, this menas timings will not be true to the original
+- No illegal op modes implemented (yet!)
+- 
 
 ---
 
@@ -102,6 +102,9 @@ The reason the tests are so thorough (3000 lines!) is because regressions are a 
 | SED | SEI | STA | STX |
 | STY | TAX | TAY | TSX |
 | TXA | TXS | TYA |     |
+
+This includes an option to enable to following bug from the original CPU:  
+  > The real 6502 incorrectly fetches the high byte of the target address if the indirect vector falls on a page boundary.
 
 ---
 
