@@ -55,7 +55,7 @@ The 6502 Implements status through a one byte register called `status` each bit 
 
 ### Stack
 
-On the 6502, the stack is a single page of memory ($0100 - $01FF) and is indexed by a register called the stack pointer. The stack grows down, which means that as new values are pushed onto the stack the sp = sp - 1. On my emulator, this is managed by `stack.rs` which lets you push and pull bytes from the stack pointer.
+On the 6502, the stack is a single page of memory ($0100 - $01FF) and is indexed by a register called the stack pointer. The stack grows down, which means that as new values are pushed onto the stack `sp = sp - 1`. On my emulator, this is managed by `stack.rs` which lets you push and pull bytes from the stack pointer.
 
 ---
 
