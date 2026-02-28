@@ -107,7 +107,12 @@ impl CPU {
 
         *ticks += 5;
         let addr_lo = Self::read_byte(bus, in_addr);
-        let addr_hi = Self::read_byte(bus, in_addr + 1);
+        let hi_addr = if self.config.emulate_indirect_jmp_bug {
+            (in_addr & 0xFF00) | ((in_addr.wrapping_add(1)) & 0x00FF)
+        } else {
+            in_addr.wrapping_add(1)
+        };
+        let addr_hi = Self::read_byte(bus, hi_addr);
         ((addr_hi as u16) << 8) | (addr_lo as u16)
     }
 

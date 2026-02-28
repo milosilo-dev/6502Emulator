@@ -2798,4 +2798,22 @@ mod tests {
         assert_eq!(cpu.read_status() & 0b10000000, 0b10000000); // N still set
         assert_eq!(cpu.read_status() & 0b00000010, 0); // Z not set
     }
+
+    #[test]
+    fn jmp_indirect_page_boundary_bug() {
+        let (mut cpu, mut bus) = init();
+        cpu.config.emulate_indirect_jmp_bug = true;
+        // Place pointer straddling a page boundary at 0x01FF/0x0100
+        bus.write(0x01FF, 0x00); // lo byte of target -> 0x00
+        bus.write(0x0100, 0x03); // hi byte read due to bug -> 0x03, target = 0x0300
+        bus.write(0x0200, 0xFF); // this is where hi byte SHOULD come from (0x0300 would be wrong target)
+                                 // if bug is NOT emulated, hi = 0xFF -> target = 0xFF00
+        bus.write(0x0000, 0x6C); // JMP indirect
+        bus.write(0x0001, 0xFF);
+        bus.write(0x0002, 0x01); // pointer address = 0x01FF
+        bus.write(0x0300, 0xA9); // LDA immediate at correct bug-emulated target
+        bus.write(0x0301, 0x42);
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_acc(), 0x42); // only passes if page wrap bug is emulated
+    }
 }
