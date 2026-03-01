@@ -297,19 +297,19 @@ impl CPU {
                 self.lsr_mem(bus, addr, &mut ticks);
                 self.config.logger.log(format!("Got {:X} from lsr at addr {:X}", self.a, addr));
             }
-            0x90 => {
+            0xB0 => {
                 // BRANCH_CARRY
                 ticks += 2;
-                if self.status & 0b00000001 == 0 {
+                if self.status & 0b00000001 != 0 {
                     self.relative_adressing(bus, &mut ticks);
                 } else {
                     self.pc = self.pc.wrapping_add(1); // skip offset byte
                 }
             }
-            0xB0 => {
+            0x90 => {
                 // BRANCH_NOT_CARRAY
                 ticks += 2;
-                if self.status & 0b00000001 != 0 {
+                if self.status & 0b00000001 == 0 {
                     self.relative_adressing(bus, &mut ticks);
                 } else {
                     self.pc = self.pc.wrapping_add(1); // skip offset byte

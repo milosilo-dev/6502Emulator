@@ -8,7 +8,7 @@ fn main() {
     let mem = Box::new(Mem::default());
     bus.register(0..=0xFFFF, mem);
 
-    let loaded = cpu.load_rom(&mut bus, "test_roms/a.o65", 0x0000);
+    let loaded = cpu.load_rom(&mut bus, "test_roms/6502_functional_test.bin", 0x0000);
     println!("Loaded {loaded}");
 
     cpu.reset(&bus);
