@@ -5,3 +5,4 @@ pub mod instruction;
 pub mod stack;
 pub mod status;
 pub mod config;
+pub mod load;

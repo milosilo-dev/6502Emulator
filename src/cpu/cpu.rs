@@ -1,7 +1,7 @@
 use crate::{bus::Bus, cpu::config::CpuConfig};
 
 pub struct CPU {
-    pub(super) pc: u16,
+    pub pc: u16,
     pub(super) sp: u8,
 
     pub(super) a: u8,

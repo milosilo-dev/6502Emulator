@@ -85,7 +85,7 @@ I am currently working towards running test roms to assess my CPU's accuracy, Cr
 
 ---
 
-## Implemented Instructions (56 / 56)
+## Implemented Instructions (60 / 60)
 
 | ADC | AND | ASL | BCC |
 |-----|-----|-----|-----|
@@ -101,7 +101,7 @@ I am currently working towards running test roms to assess my CPU's accuracy, Cr
 | RTI | RTS | SEC | SBC |
 | SED | SEI | STA | STX |
 | STY | TAX | TAY | TSX |
-| TXA | TXS | TYA |     |
+| TXA | TXS | TYA | LSR |
 
 This includes an option to enable to following bug from the original CPU:  
   > The real 6502 incorrectly fetches the high byte of the target address if the indirect vector falls on a page boundary.

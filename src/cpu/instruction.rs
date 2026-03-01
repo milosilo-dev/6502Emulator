@@ -57,6 +57,21 @@ impl CPU {
         self.asl_set_status(v, c);
     }
 
+    pub(super) fn lsr_acc(&mut self, value: u8) {
+        let c = self.a & 0b00000001 != 0;
+        self.a = value >> 1;
+        self.asl_set_status(self.a, c);
+    }
+
+    pub(super) fn lsr_mem(&mut self, bus: &mut Bus, addr: u16, ticks: &mut u32) {
+        let i = bus.read(addr);
+        let c = i & 0b00000001 != 0;
+        let v = i >> 1;
+        *ticks += 3;
+        bus.write(addr, v);
+        self.asl_set_status(v, c);
+    }
+
     pub(super) fn bit_test(&mut self, value: u8, ticks: &mut u32) {
         self.set_status(self.a & value == 0, 1); // Set the zero flag
         self.set_status(value & 0b01000000 != 0, 6);

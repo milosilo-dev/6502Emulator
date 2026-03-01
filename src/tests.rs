@@ -2816,4 +2816,106 @@ mod tests {
         cpu.step(&mut bus, 2);
         assert_eq!(cpu.read_acc(), 0x42); // only passes if page wrap bug is emulated
     }
+
+    #[test]
+    fn lsr_accumulator_basic() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x08);
+        bus.write(0x0002, 0x4A); // LSR accumulator
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_acc(), 0x04); // 0x08 >> 1
+        assert_eq!(cpu.read_status() & 0b00000001, 0); // C clear (bit 0 was 0)
+    }
+
+    #[test]
+    fn lsr_accumulator_carry_out() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x01); // bit 0 set -> shifts into carry
+        bus.write(0x0002, 0x4A); // LSR accumulator
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_acc(), 0x00); // 0x01 >> 1 = 0x00
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn lsr_accumulator_zero_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate
+        bus.write(0x0001, 0x00);
+        bus.write(0x0002, 0x4A); // LSR accumulator
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_acc(), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000010, 0b00000010); // Z set
+    }
+
+    #[test]
+    fn lsr_accumulator_clears_negative_flag() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0000, 0xA9); // LDA immediate - sets N flag
+        bus.write(0x0001, 0x80);
+        bus.write(0x0002, 0x4A); // LSR accumulator - bit 7 always cleared
+        cpu.step(&mut bus, 2);
+        assert_eq!(cpu.read_acc(), 0x40); // 0x80 >> 1 = 0x40
+        assert_eq!(cpu.read_status() & 0b10000000, 0); // N always clear after LSR
+    }
+
+    #[test]
+    fn lsr_zero_page() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x08);
+        bus.write(0x0000, 0x46); // LSR zero page
+        bus.write(0x0001, 0x42);
+        cpu.step(&mut bus, 1);
+        assert_eq!(bus.read(0x0042), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn lsr_zero_page_carry_out() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0042, 0x01); // bit 0 set -> shifts into carry
+        bus.write(0x0000, 0x46); // LSR zero page
+        bus.write(0x0001, 0x42);
+        cpu.step(&mut bus, 1);
+        assert_eq!(bus.read(0x0042), 0x00);
+        assert_eq!(cpu.read_status() & 0b00000001, 0b00000001); // C set
+    }
+
+    #[test]
+    fn lsr_zero_page_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x0015, 0x08);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x05);
+        bus.write(0x0002, 0x56); // LSR zero page, X
+        bus.write(0x0003, 0x10); // 0x10 + 0x05 = 0x15
+        cpu.step(&mut bus, 2);
+        assert_eq!(bus.read(0x0015), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn lsr_absolute() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1234, 0x08);
+        bus.write(0x0000, 0x4E); // LSR absolute
+        bus.write(0x0001, 0x34);
+        bus.write(0x0002, 0x12);
+        cpu.step(&mut bus, 1);
+        assert_eq!(bus.read(0x1234), 0x04); // 0x08 >> 1
+    }
+
+    #[test]
+    fn lsr_absolute_x() {
+        let (mut cpu, mut bus) = init();
+        bus.write(0x1003, 0x08);
+        bus.write(0x0000, 0xA2); // LDX immediate
+        bus.write(0x0001, 0x03);
+        bus.write(0x0002, 0x5E); // LSR absolute, X
+        bus.write(0x0003, 0x00);
+        bus.write(0x0004, 0x10); // 0x1000 + 0x03 = 0x1003
+        cpu.step(&mut bus, 2);
+        assert_eq!(bus.read(0x1003), 0x04); // 0x08 >> 1
+    }
 }

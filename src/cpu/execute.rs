@@ -267,6 +267,36 @@ impl CPU {
                 self.asl_mem(bus, addr, &mut ticks);
                 self.config.logger.log(format!("Got {:X} from asl at addr {:X}", self.a, addr));
             }
+            0x4A => {
+                // LSR_ACCUMULATOR
+                let value = self.accumulator_adressing(&mut ticks);
+                self.lsr_acc(value);
+                self.config.logger.log(format!("Got {:X} from lsr on {:X}", self.a, value));
+            }
+            0x46 => {
+                // LSR_ZP
+                let addr = self.get_zp_adress(bus, &mut ticks);
+                self.lsr_mem(bus, addr, &mut ticks);
+                self.config.logger.log(format!("Got {:X} from lsr at addr {:X}", self.a, addr));
+            }
+            0x56 => {
+                // LSR_ZP_X
+                let addr = self.get_zp_adress_x(bus, &mut ticks);
+                self.lsr_mem(bus, addr, &mut ticks);
+                self.config.logger.log(format!("Got {:X} from lsr at addr {:X}", self.a, addr));
+            }
+            0x4E => {
+                // LSR_ABSOLUTE
+                let addr = self.get_absolute_adress(bus, &mut ticks);
+                self.lsr_mem(bus, addr, &mut ticks);
+                self.config.logger.log(format!("Got {:X} from lsr at addr {:X}", self.a, addr));
+            }
+            0x5E => {
+                // LSR_ABSOLUTE_X
+                let addr = self.get_absolute_adress_x(bus, &mut ticks);
+                self.lsr_mem(bus, addr, &mut ticks);
+                self.config.logger.log(format!("Got {:X} from lsr at addr {:X}", self.a, addr));
+            }
             0x90 => {
                 // BRANCH_CARRY
                 ticks += 2;

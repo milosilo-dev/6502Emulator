@@ -8,14 +8,10 @@ fn main() {
     let mem = Box::new(Mem::default());
     bus.register(0..=0xFFFF, mem);
 
-    bus.write(0xFFFC, 0x00);
-    bus.write(0xFFFD, 0x00);
-
-    bus.write(0x0000, 0x69);
-    bus.write(0x0001, 0x45);
-    bus.write(0x0002, 0x69);
-    bus.write(0x0003, 0x45);
+    let loaded = cpu.load_rom(&mut bus, "test_roms/a.o65", 0x0000);
+    println!("Loaded {loaded}");
 
     cpu.reset(&bus);
-    cpu.step(&mut bus, 2);
+    cpu.pc = 0x0400;
+    cpu.run(&mut bus);
 }
