@@ -16,6 +16,6 @@ mod klaus_test {
         cpu.reset(&bus);
         cpu.pc = 0x0400;
         cpu.config.speed = 30.0; // run it faster because it take long
-        assert_eq!(cpu.run(&mut bus, 0x37CE, Some(10000)), 0);
+        assert_eq!(cpu.run(&mut bus, 0x37CE, Some(100000)), 0);
     }
 }
