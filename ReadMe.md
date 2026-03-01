@@ -72,7 +72,7 @@ It should also be noted that the test framework and thus the first few tests bui
 The reason the tests are so thorough (3000 lines!) is because regressions are a big problem in CPU Emulators with so many instructions to think about, these are to hopefully avoid regresions in the future.
 
 ### Test roms
-It is able to pass the [Klaus2m5](https://github.com/Klaus2m5/6502_65C02_functional_tests) functional test rom. I have also written a small self-made assembly file which tests a few instructions. 
+It is able to pass the [Klaus2m5](https://github.com/Klaus2m5/6502_65C02_functional_tests) functional test rom. I have also written a small self-made assembly file which tests a few instructions.
 
 ---
 

@@ -22,11 +22,16 @@ impl CPU {
         return true;
     }
 
-    pub fn run(&mut self, bus: &mut Bus) {
+    // Run a test rom until a break address is hit
+    pub fn run(&mut self, bus: &mut Bus, break_address: u16) {
         loop {
             let ticks = self.step(bus, 1);
             self.config.logger.log(format!("pc: {:X}", self.pc));
             thread::sleep(Duration::from_millis(((1.0 / self.config.speed) as u32 * ticks) as u64));
+
+            if self.pc == break_address {
+                return;
+            }
         }
     }
 }

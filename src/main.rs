@@ -13,5 +13,5 @@ fn main() {
 
     cpu.reset(&bus);
     cpu.pc = 0x0400;
-    cpu.run(&mut bus);
+    cpu.run(&mut bus, 0x37CE);
 }

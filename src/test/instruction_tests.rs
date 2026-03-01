@@ -2,7 +2,7 @@
 //      I could get a second opinion on weather or not I am implementing an instruction correctly
 
 #[cfg(test)]
-mod tests {
+mod instruction_tests {
     use crate::bus::Bus;
     use crate::cpu::cpu::CPU;
     use crate::devices::mem::Mem;
