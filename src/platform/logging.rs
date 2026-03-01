@@ -10,3 +10,10 @@ impl Logger for Stdout {
     }
 }
 
+pub struct NoLog{}
+
+#[allow(unused_variables)]
+impl Logger for NoLog {
+    fn log(&mut self, msg: String) {}
+}
+

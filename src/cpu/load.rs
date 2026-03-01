@@ -23,15 +23,29 @@ impl CPU {
     }
 
     // Run a test rom until a break address is hit
-    pub fn run(&mut self, bus: &mut Bus, break_address: u16) {
-        loop {
-            let ticks = self.step(bus, 1);
-            self.config.logger.log(format!("pc: {:X}", self.pc));
-            thread::sleep(Duration::from_millis(((1.0 / self.config.speed) as u32 * ticks) as u64));
+    // 1 -> fail, 0 -> sucsess
+    pub fn run(&mut self, bus: &mut Bus, break_address: u16, max_cycles: Option<u64>) -> u8 {
+        if max_cycles.is_some(){
+            for _ in 0..max_cycles.unwrap() {
+                let ticks = self.step(bus, 1);
+                self.config.logger.log(format!("pc: {:X}", self.pc));
+                thread::sleep(Duration::from_millis(((1.0 / self.config.speed) as u32 * ticks) as u64));
 
-            if self.pc == break_address {
-                return;
+                if self.pc == break_address {
+                    return 0;
+                }
+            }
+        } else {
+            loop {
+                let ticks = self.step(bus, 1);
+                self.config.logger.log(format!("pc: {:X}", self.pc));
+                thread::sleep(Duration::from_millis(((1.0 / self.config.speed) as u32 * ticks) as u64));
+
+                if self.pc == break_address {
+                    return 0;
+                }
             }
         }
+        1
     }
 }

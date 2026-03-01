@@ -1,4 +1,4 @@
-use crate::platform::logging::{Logger, Stdout};
+use crate::platform::logging::{Logger, NoLog, Stdout};
 
 pub struct CpuConfig {
     pub emulate_indirect_jmp_bug: bool,

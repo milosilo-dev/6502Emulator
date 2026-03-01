@@ -6,12 +6,12 @@ fn main() {
     let mut cpu = CPU::default();
     let mut bus = Bus::default();
     let mem = Box::new(Mem::default());
-    bus.register(0..=0xFFFF, mem);
+    bus.register(0..=0x7FFF, mem);
 
-    let loaded = cpu.load_rom(&mut bus, "test_roms/6502_functional_test.bin", 0x0000);
-    println!("Loaded {loaded}");
+    let _loaded = cpu.load_rom(&mut bus, "test_roms/6502_functional_test.bin", 0x0000);
 
     cpu.reset(&bus);
     cpu.pc = 0x0400;
-    cpu.run(&mut bus, 0x37CE);
+    cpu.config.speed = 30.0;
+    cpu.run(&mut bus, 0x37CE, None);
 }
