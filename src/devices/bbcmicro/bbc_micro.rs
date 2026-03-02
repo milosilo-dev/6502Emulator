@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::framebuffer::Fb};
+use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard}};
 
 pub struct BBCMicro {
     cpu: CPU,
@@ -21,7 +21,8 @@ impl BBCMicro {
         let os_rom_1 = Rom::default(vec![0; 0xBFFF-0x8000]);
         bus.register(0xC000..=0xFBFF, Box::new(os_rom_1));
 
-        let fb = Box::new(Fb::default());
+        let keyboard = Rc::new(RefCell::new(Keyboard::default()));
+        let fb = Box::new(Fb::default(keyboard));
         let video_system= VideoSystem::default(fb, Rc::clone(&ram));
         bus.register(0xFE00..=0xFE07, Box::new(video_system));
 

@@ -1,4 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
+
 use minifb::{Window, WindowOptions};
+
+use crate::platform::keyboard::Keyboard;
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 360;
@@ -6,10 +10,11 @@ const HEIGHT: usize = 360;
 pub struct Fb{
     buffer: Vec<u32>,
     window: Window,
+    keyboard: Rc<RefCell<Keyboard>>,
 }
 
 impl Fb{
-    pub fn default() -> Self{
+    pub fn default(keyboard: Rc<RefCell<Keyboard>>) -> Self{
         let window = Window::new(
             "Test - ESC to exit",
             WIDTH,
@@ -21,8 +26,9 @@ impl Fb{
         });
 
         Self { 
-            buffer: vec![0; WIDTH * HEIGHT], 
-            window 
+            buffer: vec![0; WIDTH * HEIGHT],
+            window,
+            keyboard
         }
     }
 
@@ -36,5 +42,7 @@ impl Fb{
         self.window
             .update_with_buffer(&self.buffer, WIDTH, HEIGHT)
             .unwrap();
+
+        self.keyboard.borrow_mut().update_keys(&self.window);
     }
 }
