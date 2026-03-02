@@ -8,7 +8,7 @@ mod klaus_test {
     fn functional_test() {
         let mut cpu = CPU::default();
         let mut bus = Bus::default();
-        let mem = Box::new(Mem::default());
+        let mem = Box::new(Mem::default(1024 * 64));
         bus.register(0..=0xFFFF, mem);
 
         let _loaded = cpu.load_rom(&mut bus, "test_roms/6502_functional_test.bin", 0x0000);

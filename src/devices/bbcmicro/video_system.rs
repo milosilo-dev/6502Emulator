@@ -22,8 +22,8 @@ const PALETTE: [u32; 16] = [
 ];
 
 pub struct VideoSystem {
-    memory: Rc<RefCell<Mem>>,
-    framebuffer: Rc<RefCell<Fb>>,
+    framebuffer: Box<Fb>,
+    mem: Rc<RefCell<Mem>>,
 
     base_adress: u16,
     mode: u8,
@@ -31,11 +31,10 @@ pub struct VideoSystem {
 }
 
 impl VideoSystem {
-    pub fn default(mem: Rc<RefCell<Mem>>, fb : Rc<RefCell<Fb>>) -> Self {
+    pub fn default(fb : Box<Fb>, ram: Rc<RefCell<Mem>>) -> Self {
         Self {
-            memory: mem,
             framebuffer: fb,
-
+            mem: ram,
             base_adress: 0,
             mode: 0,
             cur_sl: 0,
@@ -46,9 +45,8 @@ impl VideoSystem {
         match self.mode{
             0x02 => {
                 // Mode 2, 160 x 120 @ 4bbp (16 colours)
-
-                let mem = self.memory.borrow();
-                let mut fb = self.framebuffer.borrow_mut();
+                let mem = self.mem.borrow();
+                let fb = &mut self.framebuffer;
                 
                 let bytes_per_row = 160 / 2; // 160 pixels, 2 pixels per byte
                 let row_base = self.base_adress as usize + (self.cur_sl as usize * bytes_per_row);
@@ -60,11 +58,11 @@ impl VideoSystem {
 
                     fb.set_pixel(x*2, self.cur_sl as usize, PALETTE[pixel1 as usize]);
                     fb.set_pixel(x*2 + 1, self.cur_sl as usize, PALETTE[pixel2 as usize]);
-                    fb.update();
                 }
 
                 self.cur_sl += 1;
-                if self.cur_sl <= 120{
+                if self.cur_sl >= 120{
+                    fb.update();
                     self.cur_sl = 0;
                 }
             }
@@ -74,22 +72,27 @@ impl VideoSystem {
 }
 
 impl Device for VideoSystem {
+    #[allow(unused_variables)]
     fn read(&self, addr: u16) -> u8 {0}
 
     fn write(&mut self, addr: u16, value: u8) {
         match addr{
-            0xFE00 => {
+            0x00 => {
                 // Lowwer byte of vm adress
                 self.base_adress = (self.base_adress & 0xFF00) + value as u16;
             }
-            0xFE01 => {
+            0x01 => {
                 // Upper byte of vm adress
                 self.base_adress = (self.base_adress & 0x00FF) | ((value as u16) << 8);
             }
-            0xFE20 => {
+            0x20 => {
                 self.mode = value;
             }
             _ => {}
         }
+    }
+
+    fn tick(&mut self) {
+        self.render_scanline();
     }
 }

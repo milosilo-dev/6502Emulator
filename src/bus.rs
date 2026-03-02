@@ -3,6 +3,7 @@ use std::ops::RangeInclusive;
 pub trait Device {
     fn read(&self, addr: u16) -> u8;
     fn write(&mut self, addr: u16, value: u8);
+    fn tick(&mut self);
 }
 
 pub struct Bus {
@@ -36,6 +37,12 @@ impl Bus {
                 device.write(offset, value);
                 return;
             }
+        }
+    }
+
+    pub fn tick(&mut self){
+        for (_, device) in &mut self.devices {
+            device.tick();
         }
     }
 }

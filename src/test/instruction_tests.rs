@@ -10,7 +10,7 @@ mod instruction_tests {
     fn init() -> (CPU, Bus) {
         let mut cpu = CPU::default();
         let mut bus = Bus::default();
-        let mem = Box::new(Mem::default());
+        let mem = Box::new(Mem::default(1024 * 64));
         bus.register(0..=0xFFFF, mem);
 
         bus.write(0xFFFC, 0x00);
