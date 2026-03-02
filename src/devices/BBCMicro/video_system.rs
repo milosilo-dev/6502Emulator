@@ -27,6 +27,7 @@ pub struct VideoSystem {
 
     base_adress: u16,
     mode: u8,
+    cur_sl: u8,
 }
 
 impl VideoSystem {
@@ -37,25 +38,34 @@ impl VideoSystem {
 
             base_adress: 0,
             mode: 0,
+            cur_sl: 0,
         }
     }
 
-    pub fn render_scanline(&mut self, scanline: u8) {
+    pub fn render_scanline(&mut self) {
         match self.mode{
             0x02 => {
+                // Mode 2, 160 x 120 @ 4bbp (16 colours)
+
                 let mem = self.memory.borrow();
                 let mut fb = self.framebuffer.borrow_mut();
                 
                 let bytes_per_row = 160 / 2; // 160 pixels, 2 pixels per byte
-                let row_base = self.base_adress as usize + (scanline as usize * bytes_per_row);
+                let row_base = self.base_adress as usize + (self.cur_sl as usize * bytes_per_row);
 
                 for x in 0..bytes_per_row {
                     let byte = mem.read((row_base + x) as u16);
                     let pixel1 = (byte >> 4) & 0x0F;
                     let pixel2 = byte & 0x0F;
 
-                    fb.set_pixel(x*2, scanline as usize, PALETTE[pixel1 as usize]);
-                    fb.set_pixel(x*2 + 1, scanline as usize, PALETTE[pixel2 as usize]);
+                    fb.set_pixel(x*2, self.cur_sl as usize, PALETTE[pixel1 as usize]);
+                    fb.set_pixel(x*2 + 1, self.cur_sl as usize, PALETTE[pixel2 as usize]);
+                    fb.update();
+                }
+
+                self.cur_sl += 1;
+                if self.cur_sl <= 120{
+                    self.cur_sl = 0;
                 }
             }
             _ => {}

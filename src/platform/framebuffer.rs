@@ -32,7 +32,7 @@ impl Fb{
         }
     }
 
-    fn update(&mut self) {
+    pub fn update(&mut self) {
         self.window
             .update_with_buffer(&self.buffer, WIDTH, HEIGHT)
             .unwrap();
