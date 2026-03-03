@@ -29,7 +29,7 @@ impl BBCMicro {
         let page_rom_select = ROMSelectRegister::default(paged_rom);
         bus.register(0xFE30..=0xFE30, Box::new(page_rom_select));
 
-        let os_rom_2 = Rom::default(vec![0; 0xFF00-0xFFFF]);
+        let os_rom_2 = Rom::default(vec![0; 0x00FF]);
         bus.register(0xFF00..=0xFFFF, Box::new(os_rom_2));
 
         Self {
