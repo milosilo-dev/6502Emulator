@@ -93,7 +93,7 @@ impl Keyboard {
         }
     }
 
-    pub fn get_row(&mut self, row: u8) -> Option<u8> {
+    pub fn get_row(&self, row: u8) -> Option<u8> {
         if row > self.rows.len() as u8 - 1{
             return Some(self.rows[row as usize]);
         }
