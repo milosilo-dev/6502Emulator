@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 pub trait Device {
     fn read(&self, addr: u16) -> u8;
     fn write(&mut self, addr: u16, value: u8);
-    fn tick(&mut self);
+    fn tick(&mut self) -> bool;
 }
 
 pub struct Bus {
@@ -40,9 +40,12 @@ impl Bus {
         }
     }
 
-    pub fn tick(&mut self){
+    pub fn tick(&mut self) -> bool{
         for (_, device) in &mut self.devices {
-            device.tick();
+            if !device.tick() {
+                return false;
+            }
         }
+        true
     }
 }

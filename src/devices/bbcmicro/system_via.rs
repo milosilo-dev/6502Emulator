@@ -41,5 +41,5 @@ impl Device for SystemVIA{
     }
 
     #[allow(unused_variables)]
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
 }

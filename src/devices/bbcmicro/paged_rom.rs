@@ -19,7 +19,7 @@ impl Device for ROMSelectRegister {
     }
 
     #[allow(unused_variables)]
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
     
     #[allow(unused_variables)]
     fn read(&self, addr: u16) -> u8 {0}
@@ -39,7 +39,7 @@ impl PagedRom {
     }
 
     pub fn select_rom(&mut self, rom: u8) -> bool{
-        if rom < (self.roms.len() - 1) as u8{
+        if self.roms.len() != 0 && rom < (self.roms.len() - 1) as u8{
             self.rom = rom;
             return true;
         }
@@ -60,5 +60,5 @@ impl Device for Rc<RefCell<PagedRom>> {
     fn write(&mut self, addr: u16, value: u8) {}
 
     #[allow(unused_variables)]
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
 }

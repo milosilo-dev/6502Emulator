@@ -11,7 +11,7 @@ mod klaus_test {
         let mem = Box::new(Mem::default(1024 * 64));
         bus.register(0..=0xFFFF, mem);
 
-        let _loaded = cpu.load_rom(&mut bus, "test_roms/6502_functional_test.bin", 0x0000);
+        let _loaded = cpu.load_rom(&mut bus, "roms/6502_functional_test.bin", 0x0000);
 
         cpu.reset(&bus);
         cpu.pc = 0x0400;

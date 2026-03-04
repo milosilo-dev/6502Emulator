@@ -28,7 +28,7 @@ impl Device for Mem {
     }
 
     #[allow(unused_variables)]
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
 }
 
 impl Device for Rc<RefCell<Mem>> {
@@ -40,5 +40,5 @@ impl Device for Rc<RefCell<Mem>> {
         self.borrow_mut().write(addr, value);
     }
 
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
 }

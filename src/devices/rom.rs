@@ -1,3 +1,5 @@
+use std::fs;
+
 use crate::bus::Device;
 
 pub struct Rom {
@@ -9,6 +11,23 @@ impl Rom {
         Self {
             data,
         }
+    }
+
+    pub fn load(&mut self, path: &str) -> bool {
+        let contents = fs::read(path).unwrap_or(vec![]);
+        if contents.len() == 0 {
+            return false
+        }
+
+        let mut addr = 0;
+        for byte in contents{
+            self.data[addr] =  byte;
+            if addr != 0xFFFF{
+                addr+=1;
+            }
+        }
+
+        return true;
     }
 }
 
@@ -25,5 +44,5 @@ impl Device for Rom {
     fn write(&mut self, addr: u16, value: u8) {}
 
     #[allow(unused_variables)]
-    fn tick(&mut self) {}
+    fn tick(&mut self) -> bool {true}
 }

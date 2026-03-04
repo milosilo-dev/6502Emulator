@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard}};
+use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::NoLog}};
 
 pub struct BBCMicro {
     cpu: CPU,
@@ -9,7 +9,9 @@ pub struct BBCMicro {
 
 impl BBCMicro {
     pub fn new() -> Self{
-        let cpu = CPU::default();
+        let mut cpu = CPU::default();
+        cpu.config.logger = Box::new(NoLog{});
+
         let mut bus = Bus::default();
 
         let ram = Rc::new(RefCell::new(Mem::default(32 * 1024)));
@@ -18,19 +20,20 @@ impl BBCMicro {
         let paged_rom = Rc::new(RefCell::new(PagedRom::default()));
         bus.register(0x8000..=0xBFFF, Box::new(paged_rom.clone()));
 
-        let os_rom_1 = Rom::default(vec![0; 0xBFFF-0x8000]);
-        bus.register(0xC000..=0xFBFF, Box::new(os_rom_1));
-
         let keyboard = Rc::new(RefCell::new(Keyboard::default()));
-        let fb = Box::new(Fb::default(keyboard));
+        let fb = Box::new(Fb::default(keyboard.clone()));
         let video_system= VideoSystem::default(fb, Rc::clone(&ram));
         bus.register(0xFE00..=0xFE07, Box::new(video_system));
+
+        let system_via = SystemVIA::default(Rc::clone(&keyboard));
+        bus.register(0xFE40..=0xFE4F, Box::new(system_via));
 
         let page_rom_select = ROMSelectRegister::default(paged_rom);
         bus.register(0xFE30..=0xFE30, Box::new(page_rom_select));
 
-        let os_rom_2 = Rom::default(vec![0; 0x00FF]);
-        bus.register(0xFF00..=0xFFFF, Box::new(os_rom_2));
+        let mut os_rom = Rom::default(vec![0; 0xFFFF - 0xC000 + 1]);
+        os_rom.load("roms/bbc_micro/OS-1.2.rom");
+        bus.register(0xC000..=0xFFFF, Box::new(os_rom));
 
         Self {
             cpu,
@@ -38,10 +41,13 @@ impl BBCMicro {
         }
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> bool {
         let ticks = self.cpu.step(&mut self.bus, 1);
         for _ in 0..ticks{
-            self.bus.tick();
+            if !self.bus.tick() {
+                return false;
+            }
         }
+        true
     }
 }

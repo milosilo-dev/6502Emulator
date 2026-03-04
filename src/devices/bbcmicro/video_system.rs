@@ -27,7 +27,7 @@ pub struct VideoSystem {
 
     base_adress: u16,
     mode: u8,
-    cur_sl: u8,
+    row: u8,
 }
 
 impl VideoSystem {
@@ -37,37 +37,59 @@ impl VideoSystem {
             mem: ram,
             base_adress: 0,
             mode: 0,
-            cur_sl: 0,
+            row: 0,
         }
     }
 
-    pub fn render_scanline(&mut self) {
+    pub fn render_scanline(&mut self) -> bool {
         match self.mode{
             0x02 => {
                 // Mode 2, 160 x 120 @ 4bbp (16 colours)
                 let mem = self.mem.borrow();
                 let fb = &mut self.framebuffer;
+
+                if self.row > 120{
+                    self.row = 0;
+                    return fb.update();
+                }
                 
-                let bytes_per_row = 160 / 2; // 160 pixels, 2 pixels per byte
-                let row_base = self.base_adress as usize + (self.cur_sl as usize * bytes_per_row);
+                let bytes_per_row = 160 / 2;
+                let row_base = self.base_adress as usize + (self.row as usize * bytes_per_row);
 
                 for x in 0..bytes_per_row {
                     let byte = mem.read((row_base + x) as u16);
                     let pixel1 = (byte >> 4) & 0x0F;
                     let pixel2 = byte & 0x0F;
 
-                    fb.set_pixel(x*2, self.cur_sl as usize, PALETTE[pixel1 as usize]);
-                    fb.set_pixel(x*2 + 1, self.cur_sl as usize, PALETTE[pixel2 as usize]);
+                    fb.set_pixel(x*2, self.row as usize, PALETTE[pixel1 as usize]);
+                    fb.set_pixel(x*2 + 1, self.row as usize, PALETTE[pixel2 as usize]);
                 }
 
-                self.cur_sl += 1;
-                if self.cur_sl >= 120{
-                    fb.update();
-                    self.cur_sl = 0;
+                self.row += 1;
+            }
+            0x07 => {
+                // Mode 7, Tele-type mode
+                let mem = self.mem.borrow();
+                let fb = &mut self.framebuffer;
+
+                if self.row >= 25{
+                    self.row = 0;
+                    return fb.update();
                 }
+
+                for x in 0..40 {
+                    let byte = mem.read(self.base_adress + (self.row * 40) as u16 + x);
+                    let stripped = byte & 0b01111111;
+                    let chr = &[stripped];
+                    let s = std::str::from_utf8(chr).unwrap_or(""); 
+                    fb.draw_text((x * 6) as usize, (self.row * 10) as usize, s);
+                }
+
+                self.row += 1;
             }
             _ => {}
         }
+        return true;
     }
 }
 
@@ -87,12 +109,13 @@ impl Device for VideoSystem {
             }
             0x20 => {
                 self.mode = value;
+                self.row = 0;
             }
             _ => {}
         }
     }
 
-    fn tick(&mut self) {
-        self.render_scanline();
+    fn tick(&mut self) -> bool {
+        self.render_scanline()
     }
 }
