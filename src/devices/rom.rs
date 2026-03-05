@@ -13,21 +13,17 @@ impl Rom {
         }
     }
 
-    pub fn load(&mut self, path: &str) -> bool {
+    pub fn load(path: &str) -> Option<Self> {
         let contents = fs::read(path).unwrap_or(vec![]);
         if contents.len() == 0 {
-            return false
+            return None
         }
 
-        let mut addr = 0;
-        for byte in contents{
-            self.data[addr] =  byte;
-            if addr != self.data.len() - 1{
-                addr+=1;
-            }
-        }
+        let rom = Self{
+            data: contents
+        };
 
-        return true;
+        Some(rom)
     }
 }
 

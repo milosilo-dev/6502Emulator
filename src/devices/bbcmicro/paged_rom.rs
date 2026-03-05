@@ -38,8 +38,8 @@ impl PagedRom {
         }
     }
 
-    pub fn select_rom(&mut self, rom: u8) -> bool{
-        if self.roms.len() != 0 && rom < (self.roms.len() - 1) as u8{
+    pub fn select_rom(&mut self, rom: u8) -> bool {
+        if !self.roms.is_empty() && rom < self.roms.len() as u8 {
             self.rom = rom;
             return true;
         }
@@ -53,7 +53,8 @@ impl PagedRom {
 
 impl Device for Rc<RefCell<PagedRom>> {
     fn read(&self, addr: u16) -> u8 {
-        self.borrow_mut().roms[self.borrow().rom as usize].read(addr)
+        let this = self.borrow_mut();
+        this.roms[this.rom as usize].read(addr)
     }
 
     #[allow(unused_variables)]
