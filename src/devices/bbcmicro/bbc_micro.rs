@@ -1,6 +1,6 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, thread, time::Duration};
 
-use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::Stdout}};
+use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
 
 pub struct BBCMicro {
     cpu: CPU,
@@ -10,15 +10,15 @@ pub struct BBCMicro {
 impl BBCMicro {
     pub fn new() -> Self{
         let mut cpu = CPU::default();
-        cpu.config.logger = Box::new(Stdout{});
+        cpu.config.logger = Box::new(NoLog{});
         let mut bus = Bus::default();
 
         let ram = Rc::new(RefCell::new(Mem::default(32 * 1024)));
         bus.register(0..=0x7FFF, Box::new(ram.clone()));
 
         let paged_rom = Rc::new(RefCell::new(PagedRom::default()));
-        let basic = Rom::load("roms/bbc_micro/BASIC2.rom").unwrap_or(Rom::default(vec![0; 0xBFFF - 0x8000 + 1]));
-        paged_rom.borrow_mut().add_rom(basic);
+        //let basic = Rom::load("roms/bbc_micro/BASIC2.rom").unwrap_or(Rom::default(vec![0; 0xBFFF - 0x8000 + 1]));
+        //paged_rom.borrow_mut().add_rom(basic);
         bus.register(0x8000..=0xBFFF, Box::new(paged_rom.clone()));
 
         let keyboard = Rc::new(RefCell::new(Keyboard::default()));
@@ -45,6 +45,7 @@ impl BBCMicro {
 
     pub fn tick(&mut self) -> bool {
         let ticks = self.cpu.step(&mut self.bus, 1);
+        thread::sleep(Duration::from_micros(((1.0 / self.cpu.config.speed) as u32 * ticks) as u64));
         for _ in 0..ticks{
             if !self.bus.tick() {
                 return false;

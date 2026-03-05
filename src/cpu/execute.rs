@@ -422,11 +422,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xC5 => {
@@ -435,11 +435,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xD5 => {
@@ -448,11 +448,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xCD => {
@@ -461,11 +461,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xDD => {
@@ -474,11 +474,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xD9 => {
@@ -487,11 +487,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xC1 => {
@@ -500,11 +500,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xD1 => {
@@ -513,11 +513,11 @@ impl CPU {
                 self.cmp_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared acc and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xE0 => {
@@ -526,11 +526,11 @@ impl CPU {
                 self.cpx_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xE4 => {
@@ -539,11 +539,11 @@ impl CPU {
                 self.cpx_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xEC => {
@@ -552,11 +552,11 @@ impl CPU {
                 self.cpx_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xC0 => {
@@ -565,11 +565,11 @@ impl CPU {
                 self.cpy_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xC4 => {
@@ -578,11 +578,11 @@ impl CPU {
                 self.cpy_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xCC => {
@@ -591,11 +591,11 @@ impl CPU {
                 self.cpy_set_status(value);
                 ticks += 1;
                 self.config.logger.log(format!(
-                    "Compared X and {:X}, C: {:X}, Z: {:X}, N: {:X}",
+                    "Compared acc and {:X}, C: {}, Z: {}, N: {}",
                     value,
-                    self.status & 0b00000001,
-                    self.status & 0b00000010,
-                    self.status & 0b10000000
+                    (self.status >> 1) & 1 == 1,
+                    (self.status >> 6) & 1 == 1,
+                    (self.status >> 7) & 1 == 1
                 ));
             }
             0xC6 => {

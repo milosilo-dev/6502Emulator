@@ -54,7 +54,10 @@ impl PagedRom {
 impl Device for Rc<RefCell<PagedRom>> {
     fn read(&self, addr: u16) -> u8 {
         let this = self.borrow_mut();
-        this.roms[this.rom as usize].read(addr)
+        if !this.roms.is_empty() {
+            return this.roms[this.rom as usize].read(addr);
+        } 
+        0
     }
 
     #[allow(unused_variables)]
