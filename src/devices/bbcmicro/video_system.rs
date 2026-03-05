@@ -78,10 +78,12 @@ impl VideoSystem {
                 }
 
                 for x in 0..40 {
-                    let byte = mem.read(self.base_adress + (self.row * 40) as u16 + x);
+                    let byte = mem.read(self.base_adress + self.row as u16 * 40 + x);
                     let stripped = byte & 0b01111111;
                     let chr = &[stripped];
-                    let s = std::str::from_utf8(chr).unwrap_or(""); 
+                    let s = std::str::from_utf8(chr).unwrap_or("");
+
+                    if stripped != 0 {println!("{:X}", stripped);}
                     fb.draw_text((x * 6) as usize, (self.row * 10) as usize, s);
                 }
 

@@ -46,8 +46,8 @@ impl PagedRom {
         false
     }
 
-    pub fn add_rom(&mut self, data: Vec<u8>) {
-        self.roms.push(Rom::default(data))
+    pub fn add_rom(&mut self, data: Rom) {
+        self.roms.push(data)
     }
 }
 

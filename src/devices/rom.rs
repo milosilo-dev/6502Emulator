@@ -22,7 +22,7 @@ impl Rom {
         let mut addr = 0;
         for byte in contents{
             self.data[addr] =  byte;
-            if addr != 0xFFFF{
+            if addr != self.data.len() - 1{
                 addr+=1;
             }
         }

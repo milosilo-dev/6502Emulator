@@ -18,6 +18,9 @@ impl BBCMicro {
         bus.register(0..=0x7FFF, Box::new(ram.clone()));
 
         let paged_rom = Rc::new(RefCell::new(PagedRom::default()));
+        let mut basic = Rom::default(vec![0; 0xBFFF - 0x8000]);
+        basic.load("roms/bbc_micro/BASIC2.rom");
+        paged_rom.borrow_mut().add_rom(basic);
         bus.register(0x8000..=0xBFFF, Box::new(paged_rom.clone()));
 
         let keyboard = Rc::new(RefCell::new(Keyboard::default()));

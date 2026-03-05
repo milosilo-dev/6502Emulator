@@ -16,7 +16,7 @@ pub struct Fb{
 
 impl Fb{
     pub fn default(keyboard: Rc<RefCell<Keyboard>>) -> Self{
-        let window = Window::new(
+        let mut window = Window::new(
             "Test - ESC to exit",
             WIDTH,
             HEIGHT,
@@ -29,12 +29,17 @@ impl Fb{
             panic!("{}", e);
         });
 
-        println!("Hello");
+        let buffer = vec![0; WIDTH * HEIGHT];
+
+        window.set_target_fps(60);
+        window
+            .update_with_buffer(&buffer, WIDTH, HEIGHT)
+            .unwrap();
 
         let font = Text::new(WIDTH, HEIGHT, 2);
 
         Self { 
-            buffer: vec![0; WIDTH * HEIGHT],
+            buffer,
             window,
             keyboard,
             font
