@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, thread, time::Duration};
 
-use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
+use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem, video_ula::VideoULA}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
 
 pub struct BBCMicro {
     cpu: CPU,
@@ -11,20 +11,24 @@ impl BBCMicro {
     pub fn new() -> Self{
         let mut cpu = CPU::default();
         cpu.config.logger = Box::new(NoLog{});
+        cpu.config.speed = 10.0;
         let mut bus = Bus::default();
 
         let ram = Rc::new(RefCell::new(Mem::default(32 * 1024)));
         bus.register(0..=0x7FFF, Box::new(ram.clone()));
 
         let paged_rom = Rc::new(RefCell::new(PagedRom::default()));
-        //let basic = Rom::load("roms/bbc_micro/BASIC2.rom").unwrap_or(Rom::default(vec![0; 0xBFFF - 0x8000 + 1]));
-        //paged_rom.borrow_mut().add_rom(basic);
+        let basic = Rom::load("roms/bbc_micro/BASIC2.rom").unwrap_or(Rom::default(vec![0; 0xBFFF - 0x8000 + 1]));
+        paged_rom.borrow_mut().add_rom(basic);
         bus.register(0x8000..=0xBFFF, Box::new(paged_rom.clone()));
 
         let keyboard = Rc::new(RefCell::new(Keyboard::default()));
         let fb = Box::new(Fb::default(keyboard.clone()));
-        let video_system= VideoSystem::default(fb, Rc::clone(&ram));
-        bus.register(0xFE00..=0xFE07, Box::new(video_system));
+        let video_system= Rc::new(RefCell::new(VideoSystem::default(fb, Rc::clone(&ram))));
+        bus.register(0xFE00..=0xFE07, Box::new(video_system.clone()));
+        
+        let video_ula = VideoULA{video_system: video_system};
+        bus.register(0xFE20..=0xFE2F, Box::new(video_ula));
 
         let system_via = SystemVIA::default(Rc::clone(&keyboard));
         bus.register(0xFE40..=0xFE4F, Box::new(system_via));
@@ -45,7 +49,10 @@ impl BBCMicro {
 
     pub fn tick(&mut self) -> bool {
         let ticks = self.cpu.step(&mut self.bus, 1);
-        thread::sleep(Duration::from_micros(((1.0 / self.cpu.config.speed) as u32 * ticks) as u64));
+        //thread::sleep(Duration::from_micros(((1.0 / self.cpu.config.speed) as u32 * ticks) as u64));
+        if self.cpu.pc == 0xFFE3 {
+            println!("OSWRCH A={:02X} '{}'", self.cpu.read_acc(), self.cpu.read_acc() as char);
+        }
         for _ in 0..ticks{
             if !self.bus.tick() {
                 return false;

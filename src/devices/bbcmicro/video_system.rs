@@ -30,12 +30,13 @@ pub struct VideoSystem {
     crtc_selected: u8,
     crtc: [u8; 18],
 
-    mode: u8,
+    pub mode: u8,
+    ticks_per_frame: u16,
 }
 
 impl VideoSystem {
     pub fn default(fb: Box<Fb>, mem: Rc<RefCell<Mem>>) -> Self{
-        Self { framebuffer: fb, mem, crtc_selected: 0, crtc: [0; 18], mode: 7 }
+        Self { framebuffer: fb, mem, crtc_selected: 0, crtc: [0; 18], mode: 0, ticks_per_frame: 0 }
     }
 
     fn screen_base(&self) -> u16 {
@@ -49,32 +50,31 @@ impl VideoSystem {
             _ => {}
         };
 
-        true
-        // self.framebuffer.update()
+        self.framebuffer.update()
     }
 
     fn render_mode7(&mut self) {
-        //let base = self.screen_base();
-        //let mem = self.mem.borrow();
+        let base = self.screen_base();
+        let mem = self.mem.borrow();
 
-        //for row in 0..25 {
-            //for col in 0..40 {
-                //let addr = base + (row * 40 + col) as u16;
-                //let byte = mem.read(addr);
+        for row in 0..25 {
+            for col in 0..40 {
+                let addr = base + (row * 40 + col) as u16;
+                let byte = mem.read(addr);
 
-                //let c = if byte >= 32 && byte < 127 {
-                //    byte as char
-                //} else {
-                //    ' '
-                //};
+                let c = if byte >= 32 && byte < 127 {
+                    byte as char
+                } else {
+                    ' '
+                };
 
-                //self.framebuffer.draw_text(
-                //    col * 8,
-                //    row * 10,
-                //    &c.to_string()
-                //);
-            //}
-        //}
+                self.framebuffer.draw_text(
+                    col * 8,
+                    row * 10,
+                    &c.to_string()
+                );
+            }
+        }
     }
 
     fn render_mode2(&mut self) {
@@ -97,13 +97,52 @@ impl VideoSystem {
     }
 }
 
+impl Device for Rc<RefCell<VideoSystem>> {
+    fn read(&self, _addr: u16) -> u8 {
+        0
+    }
+
+    fn write(&mut self, addr: u16, value: u8) {
+        match addr {
+            0x00 => {
+                self.borrow_mut().crtc_selected = value & 0x1F;
+            }
+
+            0x01 => {
+                let mut this = self.borrow_mut();
+                let crtc_selected = this.crtc_selected;
+                if (crtc_selected as usize) < this.crtc.len() {
+                    this.crtc[crtc_selected as usize] = value;
+                }
+            }
+
+            0x20 => {
+                // Video ULA control (simplified)
+                self.borrow_mut().mode = value & 0x07;
+            }
+
+            _ => {}
+        } 
+    }
+
+    fn tick(&mut self) -> bool {
+        let mut this = self.borrow_mut();
+
+        this.ticks_per_frame += 1;
+        if this.ticks_per_frame >= 10000 {
+            this.ticks_per_frame = 0;
+            return this.render_frame();
+        }
+        true
+    }
+}
+
 impl Device for VideoSystem {
     fn read(&self, _addr: u16) -> u8 {
         0
     }
 
     fn write(&mut self, addr: u16, value: u8) {
-        println!("Video system! addr: 0x{:X}, value 0x{:X}", addr, value);
         match addr {
             0x00 => {
                 self.crtc_selected = value & 0x1F;
@@ -121,10 +160,15 @@ impl Device for VideoSystem {
             }
 
             _ => {}
-        }
+        } 
     }
 
     fn tick(&mut self) -> bool {
-        self.render_frame()
+        self.ticks_per_frame += 1;
+        if self.ticks_per_frame >= 10000 {
+            self.ticks_per_frame = 0;
+            return self.render_frame();
+        }
+        true
     }
 }

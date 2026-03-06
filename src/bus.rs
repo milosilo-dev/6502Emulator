@@ -31,7 +31,6 @@ impl Bus {
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
-        println!("BUS WRITE {:04X} {:02X}", addr, value);
         for (range, device) in &mut self.devices {
             if range.contains(&addr) {
                 let offset = addr - *range.start();

@@ -712,7 +712,7 @@ impl CPU {
             0xC8 => {
                 // INC_Y
                 self.incy(&mut ticks);
-                self.config.logger.log(format!("Increment the y register to {:X}", self.x));
+                self.config.logger.log(format!("Increment the y register to {:X}", self.y));
             }
             0x09 => {
                 // ORA_IMMEDIATE

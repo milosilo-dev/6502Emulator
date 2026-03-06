@@ -39,7 +39,7 @@ impl Text {
     }
 
     pub fn draw(&self, screen: &mut [u32], (mut x, y): (usize, usize), text: &str) {
-        if text != " " {println!("{}", text);}
+        //if text != " " {println!("{}", text);}
         for c in text.chars() {
             let mut index = (c as usize).wrapping_sub(' ' as usize);
             if index > MICROKNIGHT_LAYOUT.len() as usize {
