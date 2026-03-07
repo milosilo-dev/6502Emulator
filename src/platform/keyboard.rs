@@ -85,6 +85,7 @@ impl Keyboard {
         for key in cur_keys{
             let platform_key = map_key(key);
             if platform_key.is_some(){
+
                 let platform_key = platform_key.unwrap();
                 let row = platform_key.row;
                 let bit = platform_key.bit;
@@ -98,5 +99,14 @@ impl Keyboard {
             return Some(self.rows[row as usize]);
         }
         None
+    }
+
+    pub fn get_key(&self, row: u8, col: u8) -> bool{
+        println!("Got key: row: {row}, col: {col}");
+        if row > self.rows.len() as u8 - 1{
+            println!("Key press");
+            return (self.rows[row as usize] >> col) & 1 != 0;
+        }
+        false
     }
 }

@@ -36,7 +36,7 @@ impl Fb{
             .update_with_buffer(&buffer, WIDTH, HEIGHT)
             .unwrap();
 
-        let font = Text::new(WIDTH, HEIGHT, 2);
+        let font = Text::new(WIDTH, HEIGHT, 1);
 
         Self { 
             buffer,

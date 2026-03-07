@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, thread, time::Duration};
+use std::{cell::RefCell, rc::Rc, thread, time::{Duration, SystemTime}};
 
 use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem, video_ula::VideoULA}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
 
@@ -49,15 +49,22 @@ impl BBCMicro {
 
     pub fn tick(&mut self) -> bool {
         let ticks = self.cpu.step(&mut self.bus, 1);
-        //thread::sleep(Duration::from_micros(((1.0 / self.cpu.config.speed) as u32 * ticks) as u64));
-        if self.cpu.pc == 0xFFE3 {
-            println!("OSWRCH A={:02X} '{}'", self.cpu.read_acc(), self.cpu.read_acc() as char);
-        }
+
+        let now = SystemTime::now();
         for _ in 0..ticks{
             if !self.bus.tick() {
                 return false;
             }
         }
+
+        let elapsed = now.elapsed().unwrap_or(Duration::from_micros(0));
+        let time = Duration::from_micros(((1.0 / self.cpu.config.speed) as u32 * ticks) as u64);
+        let sleep_time: Duration = if time > elapsed {
+            time - elapsed
+        } else {
+            Duration::from_micros(0)
+        };
+        thread::sleep(sleep_time);
         true
     }
 }

@@ -40,7 +40,15 @@ impl VideoSystem {
     }
 
     fn screen_base(&self) -> u16 {
-        ((self.crtc[12] as u16) << 8) | self.crtc[13] as u16
+        match self.mode{
+            7 => {
+                0x7C00
+            }
+            _ => {
+                let start = ((self.crtc[12] as u16) << 8) | self.crtc[13] as u16;
+                start << 3
+            }
+        }
     }
 
     fn render_frame(&mut self) -> bool {
@@ -58,6 +66,7 @@ impl VideoSystem {
         let mem = self.mem.borrow();
 
         for row in 0..25 {
+            let mut s = String::new();
             for col in 0..40 {
                 let addr = base + (row * 40 + col) as u16;
                 let byte = mem.read(addr);
@@ -68,12 +77,14 @@ impl VideoSystem {
                     ' '
                 };
 
-                self.framebuffer.draw_text(
-                    col * 8,
-                    row * 10,
-                    &c.to_string()
-                );
+                s = format!("{}{}", s, c);
             }
+
+            self.framebuffer.draw_text(
+                0,
+                row * 8,
+                s.as_str()
+            );
         }
     }
 
