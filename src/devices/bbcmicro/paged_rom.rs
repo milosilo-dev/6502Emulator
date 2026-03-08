@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Device, devices::rom::Rom};
+use crate::{bus::{Device, TickReturn}, devices::rom::Rom};
 
 pub struct ROMSelectRegister {
     paged_rom: Rc<RefCell<PagedRom>>,
@@ -19,10 +19,10 @@ impl Device for ROMSelectRegister {
     }
 
     #[allow(unused_variables)]
-    fn tick(&mut self) -> bool {true}
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
     
     #[allow(unused_variables)]
-    fn read(&self, addr: u16) -> u8 {0}
+    fn read(&mut self, addr: u16) -> u8 {0}
 }
 
 pub struct PagedRom {
@@ -52,10 +52,11 @@ impl PagedRom {
 }
 
 impl Device for Rc<RefCell<PagedRom>> {
-    fn read(&self, addr: u16) -> u8 {
-        let this = self.borrow_mut();
+    fn read(&mut self, addr: u16) -> u8 {
+        let mut this = self.borrow_mut();
         if !this.roms.is_empty() {
-            return this.roms[this.rom as usize].read(addr);
+            let rom = this.rom as usize;
+            return this.roms[rom].read(addr);
         } 
         0
     }
@@ -64,5 +65,5 @@ impl Device for Rc<RefCell<PagedRom>> {
     fn write(&mut self, addr: u16, value: u8) {}
 
     #[allow(unused_variables)]
-    fn tick(&mut self) -> bool {true}
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
 }

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, thread, time::{Duration, SystemTime}};
 
-use crate::{bus::Bus, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem, video_ula::VideoULA}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
+use crate::{bus::{Bus, TickReturn}, cpu::cpu::CPU, devices::{bbcmicro::{paged_rom::{PagedRom, ROMSelectRegister}, system_via::SystemVIA, video_system::VideoSystem, video_ula::VideoULA}, mem::Mem, rom::Rom}, platform::{framebuffer::Fb, keyboard::Keyboard, logging::{NoLog, Stdout}}};
 
 pub struct BBCMicro {
     cpu: CPU,
@@ -39,7 +39,7 @@ impl BBCMicro {
         let os_rom = Rom::load("roms/bbc_micro/OS-1.2.rom").unwrap_or(Rom::default(vec![0; 0xFFFF - 0xC000 + 1]));
         bus.register(0xC000..=0xFFFF, Box::new(os_rom));
 
-        cpu.reset(&bus);
+        cpu.reset(&mut bus);
 
         Self {
             cpu,
@@ -48,12 +48,19 @@ impl BBCMicro {
     }
 
     pub fn tick(&mut self) -> bool {
-        let ticks = self.cpu.step(&mut self.bus, 1);
+        let mut ticks = self.cpu.step(&mut self.bus, 1);
 
         let now = SystemTime::now();
         for _ in 0..ticks{
-            if !self.bus.tick() {
-                return false;
+            match self.bus.tick() {
+                TickReturn::SHUTDOWN => {
+                    return false;
+                }
+                TickReturn::IRQ => {
+                    println!("IRQ Pin pulled");
+                    self.cpu.brk(&mut self.bus, &mut ticks);
+                }
+                TickReturn::NONE =>{}
             }
         }
 

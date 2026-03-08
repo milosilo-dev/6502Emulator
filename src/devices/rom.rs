@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::bus::Device;
+use crate::bus::{Device, TickReturn};
 
 pub struct Rom {
     data: Vec<u8>,
@@ -28,7 +28,7 @@ impl Rom {
 }
 
 impl Device for Rom {
-    fn read(&self, addr: u16) -> u8 {
+    fn read(&mut self, addr: u16) -> u8 {
         if self.data.len() > addr as usize{
             self.data[addr as usize]
         } else {
@@ -40,5 +40,5 @@ impl Device for Rom {
     fn write(&mut self, addr: u16, value: u8) {}
 
     #[allow(unused_variables)]
-    fn tick(&mut self) -> bool {true}
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
 }

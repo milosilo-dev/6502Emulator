@@ -26,7 +26,7 @@ impl CPU {
         }
     }
 
-    pub fn reset(&mut self, bus: &Bus) {
+    pub fn reset(&mut self, bus: &mut Bus) {
         self.a = 0;
         self.x = 0;
         self.y = 0;

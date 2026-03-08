@@ -2,7 +2,7 @@ use super::cpu::CPU;
 use crate::bus::Bus;
 
 impl CPU {
-    pub(super) fn pull_byte_stack(&mut self, bus: &Bus) -> u8 {
+    pub(super) fn pull_byte_stack(&mut self, bus: &mut Bus) -> u8 {
         self.sp = self.sp.wrapping_add(1);
         bus.read(0x0100 + self.sp as u16)
     }

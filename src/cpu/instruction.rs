@@ -3,19 +3,19 @@ use super::cpu::CPU;
 use crate::bus::Bus;
 
 impl CPU {
-    pub(super) fn set_pc(&mut self, bus: &Bus) {
+    pub(super) fn set_pc(&mut self, bus: &mut Bus) {
         let lo = bus.read(0xFFFC) as u16;
         let hi = bus.read(0xFFFD) as u16;
         self.pc = (hi << 8) | lo;
     }
 
-    pub(super) fn fetch_byte(&mut self, bus: &Bus) -> u8 {
+    pub(super) fn fetch_byte(&mut self, bus: &mut Bus) -> u8 {
         let data = bus.read(self.pc);
         self.pc = self.pc.wrapping_add(1);
         data
     }
 
-    pub(super) fn read_byte(bus: &Bus, addr: u16) -> u8 {
+    pub(super) fn read_byte(bus: &mut Bus, addr: u16) -> u8 {
         bus.read(addr)
     }
 
@@ -79,7 +79,7 @@ impl CPU {
         *ticks += 1;
     }
 
-    pub(super) fn brk(&mut self, bus: &mut Bus, ticks: &mut u32) {
+    pub fn brk(&mut self, bus: &mut Bus, ticks: &mut u32) {
         self.set_status(true, 4);
         self.pc += 1;
         self.push_byte_stack(bus, (self.pc >> 8) as u8);
@@ -162,13 +162,13 @@ impl CPU {
         *ticks += 2;
     }
 
-    pub(super) fn pla(&mut self, bus: &Bus, ticks: &mut u32) {
+    pub(super) fn pla(&mut self, bus: &mut Bus, ticks: &mut u32) {
         self.a = self.pull_byte_stack(bus);
         self.ld_set_status(self.a);
         *ticks += 3;
     }
 
-    pub(super) fn plp(&mut self, bus: &Bus, ticks: &mut u32) {
+    pub(super) fn plp(&mut self, bus: &mut Bus, ticks: &mut u32) {
         self.status = self.pull_byte_stack(bus) | 0b00100000;
         *ticks += 3;
     }

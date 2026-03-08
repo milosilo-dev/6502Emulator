@@ -15,7 +15,7 @@ mod instruction_tests {
 
         bus.write(0xFFFC, 0x00);
         bus.write(0xFFFD, 0x00);
-        cpu.reset(&bus);
+        cpu.reset(&mut bus);
         (cpu, bus)
     }
 

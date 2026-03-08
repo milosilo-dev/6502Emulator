@@ -1,123 +1,122 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Device, platform::keyboard::Keyboard};
+use crate::{bus::{Device, TickReturn}, cpu::cpu::CPU, platform::keyboard::Keyboard};
+
+const ROW_COUNT: usize = 10;
+
+// interupt_flag / interupt_enable bit masks
+const CA2_BIT: u8 = 0b0000_0010; // bit 1 – keyboard CA2
+const IRQ_BIT: u8 = 0b1000_0000; // bit 7 – any active IRQ
 
 pub struct SystemVIA {
     keyboard: Rc<RefCell<Keyboard>>,
 
-    ora: u8,
-    orb: u8,
+    port_b_direction: u8,
+    port_a_direction: u8,
+    port_b: u8,
+    port_a: u8,
 
-    ddra: u8,
-    ddrb: u8,
+    interupt_enable: u8,
+    interupt_flag: u8,
 
-    // Interrupt flag register and enable register (basic)
-    ifr: u8,
-    ier: u8,
+    last_matrix: [u8; ROW_COUNT],
 }
 
 impl SystemVIA {
     pub fn default(keyboard: Rc<RefCell<Keyboard>>) -> Self {
         Self {
             keyboard,
-            ora: 0,
-            orb: 0,
-
-            // BBC Micro boots with Port A as output (keyboard row/col select),
-            // Port B bit 7 as input (key detect), rest output.
-            ddra: 0xFF,
-            ddrb: 0x7F,
-
-            ifr: 0,
-            ier: 0,
+            port_b_direction: 0,
+            port_a_direction: 0,
+            port_b: 0,
+            port_a: 0,
+            interupt_enable: 0,
+            interupt_flag: 0,
+            last_matrix: [0u8; ROW_COUNT],
         }
     }
 
-    /// Scan the keyboard matrix using the current ORA value.
-    ///
-    /// ORA layout (written by the OS before reading ORB):
-    ///   bits 0-2 : column select (0-9, only 3 bits used by VIA but keyboard decodes 0-9)
-    ///   bits 3-6 : row select    (0-7)
-    ///   bit  7   : must be 0 to enable keyboard scan; 1 disables it
-    ///
-    /// Returns true if the key at (row, col) is pressed.
-    fn key_pressed(&self) -> bool {
-        // Bit 7 of ORA must be low for keyboard scanning to be active.
-        if self.ora & 0x80 != 0 {
-            return false;
+    /// Called by the CPU/bus to check whether this device is asserting IRQ.
+    pub fn irq(&self) -> bool {
+        self.interupt_flag & IRQ_BIT != 0
+    }
+
+    fn raise_ca2(&mut self) {
+        // Only raise if CA2 is enabled in interupt_enable
+        if self.interupt_enable & CA2_BIT != 0 {
+            self.interupt_flag |= CA2_BIT | IRQ_BIT;
         }
+    }
 
-        let col = (self.ora & 0x07) as u8;       // bits 0-2
-        let row = ((self.ora >> 3) & 0x0F) as u8; // bits 3-6
-
-        self.keyboard.borrow().get_key(row, col)
+    fn clear_ca2(&mut self) {
+        self.interupt_flag &= !(CA2_BIT);
+        // Clear master IRQ bit if no other flags remain
+        if self.interupt_flag & !IRQ_BIT == 0 {
+            self.interupt_flag &= !IRQ_BIT;
+        }
     }
 }
 
-// MMIO Device to be mapped from 0xFE40 - 0xFE4F
 impl Device for SystemVIA {
-    fn read(&self, addr: u16) -> u8 {
+    fn read(&mut self, addr: u16) -> u8 {
         match addr {
-            // ORB — Port B data register
-            // Bit 7 is the key-detect input: 1 = no key, 0 = key pressed.
-            // All other bits are driven by ORB/DDRB as outputs.
             0 => {
-                let key_bit = if self.key_pressed() { 0x00 } else { 0x80 };
-                // Output bits come from ORB (masked by DDRB); input bit 7 from keyboard.
-                let output_bits = self.orb & self.ddrb & 0x7F;
-                let input_bits  = key_bit & !self.ddrb;
-                output_bits | input_bits
+                let inputs = 0xF0;
+                (self.port_b & self.port_b_direction) | (inputs & !self.port_b_direction)
             }
-
-            // ORA — Port A data register (row/col select written by OS)
-            1 => self.ora,
-
-            // DDRB / DDRA
-            2 => self.ddrb,
-            3 => self.ddra,
-
-            // IFR / IER (minimal — enough for OS to check/clear keyboard IRQ)
-            13 => self.ifr,
-            14 => self.ier | 0x80, // bit 7 always reads as 1 per 6522 spec
-
+            1 => {
+                let row = self.port_b & 0x0F;
+                let input = self.keyboard.borrow().get_row(row).unwrap_or(0xF0);
+                self.clear_ca2();
+                (self.port_a & self.port_a_direction) | (input & !self.port_a_direction)
+            }
+            2 => self.port_b_direction,
+            3 => self.port_a_direction,
+            0xD => self.interupt_flag,
+            0xE => self.interupt_enable,
             _ => 0,
         }
     }
 
     fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            // ORB write — only output pins (DDRB=1) are affected
-            0 => self.orb = (self.orb & !self.ddrb) | (value & self.ddrb),
-
-            // ORA write — selects the keyboard row/column for next ORB read
-            1 => self.ora = value,
-
-            // DDRB / DDRA
-            2 => self.ddrb = value,
-            3 => self.ddra = value,
-
-            // IFR — writing 1 to a bit clears that interrupt flag
-            13 => self.ifr &= !value,
-
-            // IER — bit 7 determines set (1) or clear (0) for the masked bits
-            14 => {
-                if value & 0x80 != 0 {
-                    self.ier |= value & 0x7F;
-                } else {
-                    self.ier &= !(value & 0x7F);
+            0 => self.port_b = value,
+            1 => self.port_a = value,
+            2 => self.port_b_direction = value,
+            3 => self.port_a_direction = value,
+            0xD => {
+                // Writing to interupt_flag clears the specified flag bits
+                self.interupt_flag &= !value;
+                if self.interupt_flag & !IRQ_BIT == 0 {
+                    self.interupt_flag &= !IRQ_BIT;
                 }
             }
-
+            0xE => {
+                // Bit 7 high = set the specified bits; bit 7 low = clear them
+                if value & IRQ_BIT != 0 {
+                    self.interupt_enable |= value & !IRQ_BIT;
+                } else {
+                    self.interupt_enable &= !value;
+                }
+            }
             _ => {}
         }
     }
 
-    fn tick(&mut self) -> bool {
-        // Raise CA1 keyboard interrupt (IFR bit 1) if any key is pressed
-        // and the corresponding interrupt is enabled.
-        if self.key_pressed() {
-            self.ifr |= 0x02; // CA1 interrupt flag
+    fn tick(&mut self) -> TickReturn {
+        // Scan every row and raise CA2 if any key state has changed
+        for row in 0..ROW_COUNT {
+            let current = self.keyboard.borrow().get_row(row as u8).unwrap_or(0);
+            if current != self.last_matrix[row] {
+                self.last_matrix[row] = current;
+                self.raise_ca2();
+                break; // one IRQ per tick is enough; MOS will re-scan
+            }
         }
-        true
+        if self.irq(){
+            TickReturn::IRQ
+        } else {
+            TickReturn::NONE
+        }
     }
 }

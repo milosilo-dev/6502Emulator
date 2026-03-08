@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Device, devices::mem::Mem, platform::framebuffer::Fb};
+use crate::{bus::{Device, TickReturn}, devices::mem::Mem, platform::framebuffer::Fb};
 
 pub const PALETTE: [u32; 16] = [
     0x000000, // 0 black
@@ -63,7 +63,7 @@ impl VideoSystem {
 
     fn render_mode7(&mut self) {
         let base = self.screen_base();
-        let mem = self.mem.borrow();
+        let mut mem = self.mem.borrow_mut();
 
         for row in 0..25 {
             let mut s = String::new();
@@ -90,7 +90,7 @@ impl VideoSystem {
 
     fn render_mode2(&mut self) {
         let base = self.screen_base();
-        let mem = self.mem.borrow();
+        let mut mem = self.mem.borrow_mut();
 
         for y in 0..120 {
             let row_base = base + (y * 80) as u16;
@@ -109,7 +109,7 @@ impl VideoSystem {
 }
 
 impl Device for Rc<RefCell<VideoSystem>> {
-    fn read(&self, _addr: u16) -> u8 {
+    fn read(&mut self, _addr: u16) -> u8 {
         0
     }
 
@@ -136,20 +136,24 @@ impl Device for Rc<RefCell<VideoSystem>> {
         } 
     }
 
-    fn tick(&mut self) -> bool {
+    fn tick(&mut self) -> TickReturn {
         let mut this = self.borrow_mut();
 
         this.ticks_per_frame += 1;
         if this.ticks_per_frame >= 10000 {
             this.ticks_per_frame = 0;
-            return this.render_frame();
+            if this.render_frame() {
+                return TickReturn::NONE;
+            } else {
+                return TickReturn::SHUTDOWN;
+            }
         }
-        true
+        TickReturn::NONE
     }
 }
 
 impl Device for VideoSystem {
-    fn read(&self, _addr: u16) -> u8 {
+    fn read(&mut self, _addr: u16) -> u8 {
         0
     }
 
@@ -174,12 +178,16 @@ impl Device for VideoSystem {
         } 
     }
 
-    fn tick(&mut self) -> bool {
+    fn tick(&mut self) -> TickReturn {
         self.ticks_per_frame += 1;
         if self.ticks_per_frame >= 10000 {
             self.ticks_per_frame = 0;
-            return self.render_frame();
+            if self.render_frame() {
+                return TickReturn::NONE;
+            } else {
+                return TickReturn::SHUTDOWN;
+            }
         }
-        true
+        TickReturn::NONE
     }
 }

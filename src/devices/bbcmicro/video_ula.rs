@@ -1,13 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::Device, devices::bbcmicro::video_system::VideoSystem};
+use crate::{bus::{Device, TickReturn}, devices::bbcmicro::video_system::VideoSystem};
 
 pub struct VideoULA{
     pub video_system: Rc<RefCell<VideoSystem>>,
 }
 
 impl Device for VideoULA {
-    fn read(&self, addr: u16) -> u8 {
+    fn read(&mut self, addr: u16) -> u8 {
         println!("VideoULA {:02X}", addr);
         0
     }
@@ -26,5 +26,6 @@ impl Device for VideoULA {
         }
     }
 
-    fn tick(&mut self) -> bool { true }
+    #[allow(unused_variables)]
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
 }

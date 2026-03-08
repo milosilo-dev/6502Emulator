@@ -1,9 +1,15 @@
 use std::ops::RangeInclusive;
 
+pub enum TickReturn{
+    SHUTDOWN,
+    IRQ,
+    NONE
+}
+
 pub trait Device {
-    fn read(&self, addr: u16) -> u8;
+    fn read(&mut self, addr: u16) -> u8;
     fn write(&mut self, addr: u16, value: u8);
-    fn tick(&mut self) -> bool;
+    fn tick(&mut self) -> TickReturn;
 }
 
 pub struct Bus {
@@ -19,8 +25,8 @@ impl Bus {
         self.devices.push((range, device));
     }
 
-    pub fn read(&self, addr: u16) -> u8 {
-        for (range, device) in &self.devices {
+    pub fn read(&mut self, addr: u16) -> u8 {
+        for (range, device) in &mut self.devices {
             if range.contains(&addr) {
                 let offset = addr - *range.start();
                 return device.read(offset);
@@ -40,12 +46,19 @@ impl Bus {
         }
     }
 
-    pub fn tick(&mut self) -> bool{
+    pub fn tick(&mut self) -> TickReturn{
+        let mut ret = TickReturn::NONE;
         for (_, device) in &mut self.devices {
-            if !device.tick() {
-                return false;
+            match device.tick() {
+                TickReturn::IRQ => {
+                    ret = TickReturn::IRQ;
+                }
+                TickReturn::SHUTDOWN => {
+                    return TickReturn::SHUTDOWN;
+                }
+                TickReturn::NONE => {}
             }
         }
-        true
+        ret
     }
 }

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::bus::Device;
+use crate::bus::{Device, TickReturn};
 
 pub struct Mem {
     data: Vec<u8>,
@@ -19,7 +19,7 @@ impl Mem {
 }
 
 impl Device for Mem {
-    fn read(&self, addr: u16) -> u8 {
+    fn read(&mut self, addr: u16) -> u8 {
         self.data[addr as usize]
     }
 
@@ -28,17 +28,18 @@ impl Device for Mem {
     }
 
     #[allow(unused_variables)]
-    fn tick(&mut self) -> bool {true}
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
 }
 
 impl Device for Rc<RefCell<Mem>> {
-    fn read(&self, addr: u16) -> u8 {
-        self.borrow().read(addr)
+    fn read(&mut self, addr: u16) -> u8 {
+        self.borrow_mut().read(addr)
     }
 
     fn write(&mut self, addr: u16, value: u8) {
         self.borrow_mut().write(addr, value);
     }
 
-    fn tick(&mut self) -> bool {true}
+    #[allow(unused_variables)]
+    fn tick(&mut self) -> TickReturn {TickReturn::NONE}
 }
