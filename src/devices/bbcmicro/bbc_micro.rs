@@ -57,8 +57,10 @@ impl BBCMicro {
                     return false;
                 }
                 TickReturn::IRQ => {
-                    println!("IRQ Pin pulled");
-                    self.cpu.brk(&mut self.bus, &mut ticks);
+                    if !(self.cpu.read_status() & 0b0001_0000 != 0){
+                        println!("IRQ Pin pulled");
+                        self.cpu.brk(&mut self.bus, &mut ticks);
+                    }
                 }
                 TickReturn::NONE =>{}
             }

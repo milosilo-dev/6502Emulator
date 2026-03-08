@@ -85,11 +85,10 @@ impl Keyboard {
         for key in cur_keys{
             let platform_key = map_key(key);
             if platform_key.is_some(){
-
                 let platform_key = platform_key.unwrap();
                 let row = platform_key.row;
                 let bit = platform_key.bit;
-                self.rows[row] |= 1 << bit;
+                self.rows[row] &= !(1 << bit);
             }
         }
     }

@@ -1,12 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{bus::{Device, TickReturn}, cpu::cpu::CPU, platform::keyboard::Keyboard};
+use crate::{
+    bus::{Device, TickReturn},
+    platform::keyboard::Keyboard,
+};
 
-const ROW_COUNT: usize = 10;
+const ROW_COUNT: usize = 8;
 
-// interupt_flag / interupt_enable bit masks
-const CA2_BIT: u8 = 0b0000_0010; // bit 1 – keyboard CA2
-const IRQ_BIT: u8 = 0b1000_0000; // bit 7 – any active IRQ
+// interrupt bits
+const CA2_BIT: u8 = 0b0000_0010;
+const IRQ_BIT: u8 = 0b1000_0000;
 
 pub struct SystemVIA {
     keyboard: Rc<RefCell<Keyboard>>,
@@ -16,8 +19,8 @@ pub struct SystemVIA {
     port_b: u8,
     port_a: u8,
 
-    interupt_enable: u8,
-    interupt_flag: u8,
+    interrupt_enable: u8,
+    interrupt_flag: u8,
 
     last_matrix: [u8; ROW_COUNT],
 }
@@ -30,90 +33,107 @@ impl SystemVIA {
             port_a_direction: 0,
             port_b: 0,
             port_a: 0,
-            interupt_enable: 0,
-            interupt_flag: 0,
-            last_matrix: [0u8; ROW_COUNT],
+            interrupt_enable: 0,
+            interrupt_flag: 0,
+            last_matrix: [0; ROW_COUNT],
         }
     }
 
-    /// Called by the CPU/bus to check whether this device is asserting IRQ.
-    pub fn irq(&self) -> bool {
-        self.interupt_flag & IRQ_BIT != 0
+    fn irq_active(&self) -> bool {
+        (self.interrupt_flag & self.interrupt_enable) != 0
     }
 
     fn raise_ca2(&mut self) {
-        // Only raise if CA2 is enabled in interupt_enable
-        if self.interupt_enable & CA2_BIT != 0 {
-            self.interupt_flag |= CA2_BIT | IRQ_BIT;
-        }
-    }
-
-    fn clear_ca2(&mut self) {
-        self.interupt_flag &= !(CA2_BIT);
-        // Clear master IRQ bit if no other flags remain
-        if self.interupt_flag & !IRQ_BIT == 0 {
-            self.interupt_flag &= !IRQ_BIT;
-        }
+        self.interrupt_flag |= CA2_BIT;
     }
 }
 
 impl Device for SystemVIA {
     fn read(&mut self, addr: u16) -> u8 {
         match addr {
+            // Port B
             0 => {
                 let inputs = 0xF0;
-                (self.port_b & self.port_b_direction) | (inputs & !self.port_b_direction)
+                (self.port_b & self.port_b_direction)
+                    | (inputs & !self.port_b_direction)
             }
+
+            // Port A
             1 => {
                 let row = self.port_b & 0x0F;
                 let input = self.keyboard.borrow().get_row(row).unwrap_or(0xF0);
-                self.clear_ca2();
-                (self.port_a & self.port_a_direction) | (input & !self.port_a_direction)
+
+                (self.port_a & self.port_a_direction)
+                    | (input & !self.port_a_direction)
             }
+
+            // DDRB
             2 => self.port_b_direction,
+
+            // DDRA
             3 => self.port_a_direction,
-            0xD => self.interupt_flag,
-            0xE => self.interupt_enable,
+
+            // IFR
+            0xD => {
+                let mut value = self.interrupt_flag;
+                if self.irq_active() {
+                    value |= IRQ_BIT;
+                }
+                value
+            }
+
+            // IER
+            0xE => self.interrupt_enable | IRQ_BIT,
+
             _ => 0,
         }
     }
 
     fn write(&mut self, addr: u16, value: u8) {
         match addr {
+            // Port B
             0 => self.port_b = value,
+
+            // Port A
             1 => self.port_a = value,
+
+            // DDRB
             2 => self.port_b_direction = value,
+
+            // DDRA
             3 => self.port_a_direction = value,
+
+            // IFR (writing clears bits)
             0xD => {
-                // Writing to interupt_flag clears the specified flag bits
-                self.interupt_flag &= !value;
-                if self.interupt_flag & !IRQ_BIT == 0 {
-                    self.interupt_flag &= !IRQ_BIT;
-                }
+                self.interrupt_flag &= !value;
             }
+
+            // IER
             0xE => {
-                // Bit 7 high = set the specified bits; bit 7 low = clear them
                 if value & IRQ_BIT != 0 {
-                    self.interupt_enable |= value & !IRQ_BIT;
+                    self.interrupt_enable |= value & !IRQ_BIT;
                 } else {
-                    self.interupt_enable &= !value;
+                    self.interrupt_enable &= !(value & !IRQ_BIT);
                 }
             }
+
             _ => {}
         }
     }
 
     fn tick(&mut self) -> TickReturn {
-        // Scan every row and raise CA2 if any key state has changed
         for row in 0..ROW_COUNT {
             let current = self.keyboard.borrow().get_row(row as u8).unwrap_or(0);
+
             if current != self.last_matrix[row] {
                 self.last_matrix[row] = current;
+                println!("Key change detected row {} {:02X}->{:02X}", row, self.last_matrix[row], current);
                 self.raise_ca2();
-                break; // one IRQ per tick is enough; MOS will re-scan
+                break;
             }
         }
-        if self.irq(){
+
+        if self.irq_active() {
             TickReturn::IRQ
         } else {
             TickReturn::NONE
