@@ -62,6 +62,7 @@ impl Device for SystemVIA {
             1 => {
                 let row = self.port_b & 0x0F;
                 let input = self.keyboard.borrow().get_row(row).unwrap_or(0xF0);
+                println!("Key board input requested: {}", input);
 
                 (self.port_a & self.port_a_direction)
                     | (input & !self.port_a_direction)
