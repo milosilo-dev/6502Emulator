@@ -48,7 +48,7 @@ impl BBCMicro {
     }
 
     pub fn tick(&mut self) -> bool {
-        let mut ticks = self.cpu.step(&mut self.bus, 1);
+        let ticks = self.cpu.step(&mut self.bus, 1);
 
         let now = SystemTime::now();
         for _ in 0..ticks{
@@ -57,9 +57,9 @@ impl BBCMicro {
                     return false;
                 }
                 TickReturn::IRQ => {
-                    if !(self.cpu.read_status() & 0b0001_0000 != 0){
-                        println!("IRQ Pin pulled");
-                        self.cpu.brk(&mut self.bus, &mut ticks);
+                    if !(self.cpu.read_status() & 0b0000_0100 != 0){
+                        let mut ticks_lc = 0 as u32;
+                        self.cpu.brk(&mut self.bus, &mut ticks_lc);
                     }
                 }
                 TickReturn::NONE =>{}

@@ -8,7 +8,7 @@ use crate::{
 const ROW_COUNT: usize = 8;
 
 // interrupt bits
-const CA2_BIT: u8 = 0b0000_0010;
+const CA1_BIT: u8 = 0b0000_0001;
 const IRQ_BIT: u8 = 0b1000_0000;
 
 pub struct SystemVIA {
@@ -35,7 +35,7 @@ impl SystemVIA {
             port_a: 0,
             interrupt_enable: 0,
             interrupt_flag: 0,
-            last_matrix: [0; ROW_COUNT],
+            last_matrix: [0xFF; ROW_COUNT],
         }
     }
 
@@ -43,13 +43,14 @@ impl SystemVIA {
         (self.interrupt_flag & self.interrupt_enable) != 0
     }
 
-    fn raise_ca2(&mut self) {
-        self.interrupt_flag |= CA2_BIT;
+    fn raise_ca1(&mut self) {
+        self.interrupt_flag |= CA1_BIT;
     }
 }
 
 impl Device for SystemVIA {
     fn read(&mut self, addr: u16) -> u8 {
+        println!("Read to system via at addr: {:X}", addr);
         match addr {
             // Port B
             0 => {
@@ -58,14 +59,16 @@ impl Device for SystemVIA {
                     | (inputs & !self.port_b_direction)
             }
 
-            // Port A
             1 => {
-                let row = self.port_b & 0x0F;
-                let input = self.keyboard.borrow().get_row(row).unwrap_or(0xF0);
-                println!("Key board input requested: {}", input);
-
-                (self.port_a & self.port_a_direction)
-                    | (input & !self.port_a_direction)
+                let key = self.port_a; // OS wrote the key number here
+                let row = (key >> 4) & 0x07;
+                let col = key & 0x0F;
+                
+                let row_data = self.keyboard.borrow().get_row(row).unwrap_or(0xFF);
+                let pressed = (row_data & (1 << col)) == 0; // active low
+                
+                // return the key number with bit 7 set if pressed
+                if pressed { key | 0x80 } else { key & 0x7F }
             }
 
             // DDRB
@@ -91,6 +94,7 @@ impl Device for SystemVIA {
     }
 
     fn write(&mut self, addr: u16, value: u8) {
+        println!("Write to system via at addr: {:X} with value {:X}", addr, value);
         match addr {
             // Port B
             0 => self.port_b = value,
@@ -124,12 +128,11 @@ impl Device for SystemVIA {
 
     fn tick(&mut self) -> TickReturn {
         for row in 0..ROW_COUNT {
-            let current = self.keyboard.borrow().get_row(row as u8).unwrap_or(0);
+            let current = self.keyboard.borrow().get_row(row as u8).unwrap_or(0xFF);
 
             if current != self.last_matrix[row] {
                 self.last_matrix[row] = current;
-                println!("Key change detected row {} {:02X}->{:02X}", row, self.last_matrix[row], current);
-                self.raise_ca2();
+                self.raise_ca1();
                 break;
             }
         }

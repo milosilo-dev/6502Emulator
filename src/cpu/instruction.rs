@@ -86,6 +86,7 @@ impl CPU {
         self.push_byte_stack(bus, (self.pc & 0xFF) as u8);
         let status = self.status | 0b00110000;
         self.push_byte_stack(bus, status);
+        self.set_status(true, 2);
 
         self.pc = u16::from_le_bytes([bus.read(0xFFFE), bus.read(0xFFFF)]);
         *ticks += 7;
